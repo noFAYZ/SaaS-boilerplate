@@ -1,56 +1,81 @@
-import { Link } from "@heroui/link";
-import { Snippet } from "@heroui/snippet";
-import { Code } from "@heroui/code";
-import { button as buttonStyles } from "@heroui/theme";
-
-import { siteConfig } from "@/config/site";
 import { title, subtitle } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
+import { Card, CardBody, CardHeader, CardFooter } from "@heroui/card";
+import { Divider } from "@heroui/divider";
+import { Button } from "@heroui/button";
+import { Progress } from "@heroui/progress";
+import { 
+  TrendingUpIcon, 
+  UserPlusIcon, 
+  ShoppingCartIcon, 
+  DollarSignIcon 
+} from "lucide-react";
 
-export default function Home() {
+export default function DashboardPage() {
+  // Sample statistics data
+  const stats = [
+    {
+      title: "Total Revenue",
+      value: "$24,423",
+      change: "+12.5%",
+      icon: <DollarSignIcon className="text-primary" />,
+      positive: true,
+    },
+    {
+      title: "New Customers",
+      value: "2,149",
+      change: "+18.2%",
+      icon: <UserPlusIcon className="text-success" />,
+      positive: true,
+    },
+    {
+      title: "Active Projects",
+      value: "42",
+      change: "+8.1%",
+      icon: <TrendingUpIcon className="text-warning" />,
+      positive: true,
+    },
+    {
+      title: "Pending Orders",
+      value: "12",
+      change: "-2.4%",
+      icon: <ShoppingCartIcon className="text-danger" />,
+      positive: false,
+    },
+  ];
+
+  // Sample projects data
+  const projects = [
+    {
+      name: "Website Redesign",
+      progress: 75,
+      status: "In Progress",
+    },
+    {
+      name: "Mobile App Development",
+      progress: 32,
+      status: "In Progress",
+    },
+    {
+      name: "Marketing Campaign",
+      progress: 100,
+      status: "Completed",
+    },
+    {
+      name: "Database Migration",
+      progress: 58,
+      status: "In Progress",
+    },
+  ];
+
   return (
-    <section className="flex flex-col items-center justify-center gap-4 py-8 md:py-10">
-      <div className="inline-block max-w-xl text-center justify-center">
-        <span className={title()}>Make&nbsp;</span>
-        <span className={title({ color: "violet" })}>beautiful&nbsp;</span>
-        <br />
-        <span className={title()}>
-          websites regardless of your design experience.
-        </span>
-        <div className={subtitle({ class: "mt-4" })}>
-          Beautiful, fast and modern React UI library.
-        </div>
+    < >
+      <div className="flex flex-col gap-2">
+        <h3 className='text-3xl font-semibold'>Dashboard</h3>
+        <p className="text-default-500">Welcome back! Here's an overview of your progress today.</p>
       </div>
 
-      <div className="flex gap-3">
-        <Link
-          isExternal
-          className={buttonStyles({
-            color: "primary",
-            radius: "full",
-            variant: "shadow",
-          })}
-          href={siteConfig.links.docs}
-        >
-          Documentation
-        </Link>
-        <Link
-          isExternal
-          className={buttonStyles({ variant: "bordered", radius: "full" })}
-          href={siteConfig.links.github}
-        >
-          <GithubIcon size={20} />
-          GitHub
-        </Link>
-      </div>
 
-      <div className="mt-8">
-        <Snippet hideCopyButton hideSymbol variant="bordered">
-          <span>
-            Get started by editing <Code color="primary">app/page.tsx</Code>
-          </span>
-        </Snippet>
-      </div>
-    </section>
+   
+    </>
   );
 }

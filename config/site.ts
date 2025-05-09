@@ -35,6 +35,10 @@ export const siteConfig = {
       href: "/dashboard",
     },
     {
+      label: "Settings",
+      href: "/settings",
+    },
+    {
       label: "Projects",
       href: "/projects",
     },
@@ -45,10 +49,6 @@ export const siteConfig = {
     {
       label: "Calendar",
       href: "/calendar",
-    },
-    {
-      label: "Settings",
-      href: "/settings",
     },
     {
       label: "Help & Feedback",
@@ -66,4 +66,10 @@ export const siteConfig = {
     discord: "https://discord.gg/9b6yyZKmH4",
     sponsor: "https://patreon.com/jrgarciadev",
   },
+  authLinks: {
+    profile: "/profile",
+    settings: "/settings",
+    login: "/login",
+    resetPassword: "/reset-password",
+  }
 };
