@@ -24,8 +24,9 @@ import {
   SolarPieChartBold, 
   SolarWalletOutline, 
   TablerHelpSquareRounded, 
-
 } from "./icons/icons";
+import { useNavigation } from "@/contexts/NavigationContext";
+import { navigationItems } from "@/config/navigation";
 
 interface SidebarProps {
   className?: string;
@@ -38,56 +39,11 @@ export const Sidebar = ({ className }: SidebarProps) => {
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const pathname = usePathname();
 
-  // Navigation categories
-  const navigationCategories = [
-    {
-      title: "Main",
-      items: [
-        {
-          label: "Dashboard",
-          href: "/",
-          icon: <RadixIconsDashboard className="w-5 h-5" />,
-          badge: null,
-        },
-         {
-          label: "Portfolios",
-          href: "/portfolios",
-          icon: <SolarPieChartBold className="w-5 h-5" />,
-          badge: null,
-        },
-        {
-          label: "Accounts",
-          href: "/accounts",
-          icon: <SolarWalletOutline className="w-5 h-5" />,
-          badge: null,
-        },
-        {
-          label: "Analytics",
-          href: "/analytics",
-          icon: <HugeiconsAnalyticsUp className="w-5 h-5" />,
-          badge: { text: "New", color: "primary" },
-        },
-      ],
-    },
-   
-   /*  {
-      title: "Business",
-      items: [
-        {
-          label: "Pricing",
-          href: "/pricing",
-          icon: <ShoppingCartIcon size={20} />,
-          badge: null,
-        },
-        {
-          label: "About",
-          href: "/about",
-          icon: <HelpCircleIcon size={20} />,
-          badge: null,
-        },
-      ],
-    }, */
-  ];
+  // Get navigation context
+  const { navigationMode, disabledSidebarPaths } = useNavigation();
+  
+  // Check if sidebar should be hidden on current path
+  const shouldHideSidebar = disabledSidebarPaths.includes(pathname) || navigationMode === 'navbar';
 
   // User menu items
   const userMenuItems = [
@@ -155,6 +111,11 @@ export const Sidebar = ({ className }: SidebarProps) => {
       setOpen(false);
     }
   };
+
+  // If sidebar should be hidden, return null
+  if (shouldHideSidebar) {
+    return null;
+  }
 
   return (
     <>
@@ -256,7 +217,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
           )}
 
           {/* Navigation items by category */}
-          {navigationCategories.map((category, categoryIndex) => (
+          {navigationItems.map((category, categoryIndex) => (
             <div key={categoryIndex} className="w-full">
               {/* Category title - only show when expanded */}
               {(!collapsed || isMobile) && (

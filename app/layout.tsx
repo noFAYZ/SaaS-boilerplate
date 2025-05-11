@@ -8,9 +8,9 @@ import { siteConfig } from "@/config/site";
 import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
-import { Atkinson_Hyperlegible, Jost,Space_Grotesk } from 'next/font/google'
+import { NavigationProvider } from "@/contexts/NavigationContext";
+import { Atkinson_Hyperlegible, Jost, Space_Grotesk } from 'next/font/google'
  
-
 const lexend = Space_Grotesk({
   subsets: ['latin'],
   display: 'swap',
@@ -28,28 +28,27 @@ export default function RootLayout({
       <body
         className={clsx(
           "antialiased ",
-        
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <div className="flex h-screen overflow-hidden bg-gradient-to-b from-background to-background/90">
-            {/* Sidebar */}
-            <Sidebar />
-            
-            {/* Main Content */}
-            <div className="flex-1 flex flex-col w-full overflow-hidden">
-              <Navbar />
+          <NavigationProvider>
+            <div className="flex h-screen overflow-hidden bg-gradient-to-b from-background to-background/90">
+              {/* Sidebar - controlled by NavigationContext */}
+              <Sidebar />
               
-              {/* Main content area with scrolling */}
-              <main className="flex-1 overflow-y-auto">
-                <div className="container mx-auto max-w-7xl px-6 py-8">
-                  {children}
-                </div>
-              </main>
-              
-       
+              {/* Main Content */}
+              <div className="flex-1 flex flex-col w-full overflow-hidden">
+                <Navbar />
+                
+                {/* Main content area with scrolling */}
+                <main className="flex-1 overflow-y-auto">
+                  <div className="container mx-auto max-w-7xl px-6 py-8">
+                    {children}
+                  </div>
+                </main>
+              </div>
             </div>
-          </div>
+          </NavigationProvider>
         </Providers>
       </body>
     </html>

@@ -18,13 +18,13 @@ export default function Home() {
             Welcome to ACME Finance
           </span>
         </div>
-        <span className={title({ color: "foreground" })}>Modern&nbsp;</span>
-        <span className={title({ color: "primary" })}>Finance&nbsp;</span>
+        <span className={title({ color: "foreground", size: 'lg' })}>Modern&nbsp;</span>
+        <span className={title({ color: "primary", size: 'lg' })}>Finance&nbsp;</span>
         <br />
-        <span className={title({ color: "foreground" })}>
+        <span className={title({ color: "foreground", size: 'lg' })}>
           for the digital age.
         </span>
-        <div className={subtitle({ class: "mt-4" })}>
+        <div className={subtitle({ class: "mt-4 text-md", })}>
           Beautiful, fast, and reliable financial tracking built for modern businesses.
         </div>
       </div>
@@ -36,7 +36,7 @@ export default function Home() {
             color: "default",
             radius: "full",
             variant: "shadow",
-            size: "lg",
+            size: "md",
           })}
           href={siteConfig.links.docs}
         >
@@ -47,7 +47,7 @@ export default function Home() {
           className={buttonStyles({ 
             variant: "bordered", 
             radius: "full",
-            size: "lg",
+            size: "md",
           })}
           href={siteConfig.links.github}
         >
