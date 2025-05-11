@@ -102,14 +102,15 @@ export function CurrencySelector({
         </label>
       )}
       
-      <Dropdown>
+      <Dropdown className="transition-all duration-0 ease-in-out">
         <DropdownTrigger>
           <Button
             variant={variant}
             radius="full"
+            size="sm"
             startContent={    selectedCurrency ? (
-              <div className="flex items-center h-7 w-7 bg-default-100 rounded-full text-center gap-2">
-                <span className="text-lg">{selectedCurrency.flag}</span>
+              <div className="flex items-center  w-6 h-6 bg-secondary-100 rounded-full text-center gap-2">
+                <span className="text-sm text-center">{selectedCurrency.flag}</span>
                 
               </div>
             ) : (
@@ -119,9 +120,9 @@ export function CurrencySelector({
               </div>
             )   }
             endContent={<ChevronDown size={16} />}
-            className={cn(buttonSizeClass, " justify-between px-1")}
+            className={cn(buttonSizeClass, " justify-between bg-default-100 px-1")}
           >
-            {selectedCurrency && (<span className="font-semibold">{selectedCurrency.code}</span>) }
+            {selectedCurrency && (<span className="font-semibold text-xs">{selectedCurrency.code}</span>) }
           </Button>
         </DropdownTrigger>
         
@@ -160,7 +161,7 @@ export function CurrencySelector({
               className="w-full rounded-2xl"
                 key={`currency-${currency.code}`}
                 startContent={
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-default-100 text-lg">
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-default-100 text-xs">
                     {currency.flag}
                   </div>
                 }
@@ -175,7 +176,7 @@ export function CurrencySelector({
                 onPress={() => handleSelect(currency)}
                 description={`${currency.symbol} · ${currency.name}`}
               >
-                <span className="font-medium">{currency.code} </span>
+                <span className="font-medium text-xs">{currency.code} </span>
               </DropdownItem>
             ))}
           </DropdownSection>

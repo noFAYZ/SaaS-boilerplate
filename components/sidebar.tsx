@@ -2,36 +2,30 @@
 
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { Listbox, ListboxItem } from "@heroui/listbox";
 import { Button } from "@heroui/button";
-import { Tooltip } from "@heroui/tooltip";
 import { Divider } from "@heroui/divider";
 import { Link } from "@heroui/link";
-import { Avatar } from "@heroui/avatar";
-import { Badge } from "@heroui/badge";
-import { Chip } from "@heroui/chip";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { 
-  ChevronLeftIcon, 
-  ChevronRightIcon, 
-  HomeIcon, 
-  LayoutDashboardIcon, 
-  FileTextIcon, 
-  ShoppingCartIcon, 
-  UsersIcon,
-  SettingsIcon, 
-  HelpCircleIcon, 
-  LogOutIcon,
-  BellIcon,
-  ActivityIcon,
-  StarIcon,
-  TrendingUpIcon
+  ChevronRightIcon,
+  HelpCircleIcon,
+  ShoppingCartIcon,
 } from "lucide-react";
 
-import { siteConfig } from "@/config/site";
 import { Logo } from "@/components/icons";
-import { CuidaLogoutOutline, HeroiconsOutlineLogout, HugeiconsAnalyticsUp, HugeiconsSettings05, HugeiconsSidebarLeft01, HugeiconsSidebarRight01, RadixIconsDashboard, SolarPieChartBold, SolarWalletOutline, TablerHelpSquareRounded } from "./icons/icons";
+import { 
+  CuidaLogoutOutline, 
+  HugeiconsAnalyticsUp, 
+  HugeiconsSettings05, 
+  HugeiconsSidebarLeft01, 
+  HugeiconsSidebarRight01, 
+  RadixIconsDashboard, 
+  SolarPieChartBold, 
+  SolarWalletOutline, 
+  TablerHelpSquareRounded, 
+
+} from "./icons/icons";
 
 interface SidebarProps {
   className?: string;
@@ -76,7 +70,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
       ],
     },
    
-    {
+   /*  {
       title: "Business",
       items: [
         {
@@ -92,7 +86,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
           badge: null,
         },
       ],
-    },
+    }, */
   ];
 
   // User menu items
@@ -100,17 +94,17 @@ export const Sidebar = ({ className }: SidebarProps) => {
     {
       label: "Settings",
       href: "/settings",
-      icon: <HugeiconsSettings05 className="w-5 h-5 " />,
+      icon: <HugeiconsSettings05 className="w-5 h-5" />,
     },
     {
       label: "Help & Support",
       href: "/help",
-      icon: <TablerHelpSquareRounded className="w-5 h-5 " />,
+      icon: <TablerHelpSquareRounded className="w-5 h-5" />,
     },
     {
       label: "Logout",
       href: "/logout",
-      icon: <CuidaLogoutOutline className="w-5 h-5 text-red-600" />,
+      icon: <CuidaLogoutOutline className="w-5 h-5 text-destructive" />,
     },
   ];
 
@@ -167,7 +161,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
       {/* Mobile overlay */}
       {isMobile && open && (
         <div 
-          className=" fixed inset-0 bg-black/50 backdrop-blur-sm "
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
           onClick={() => setOpen(false)}
         />
       )}
@@ -179,7 +173,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
           variant="ghost"
           radius="full"
           size="sm"
-          className="fixed top-4 left-4 z-40 shadow-md bg-background/80 backdrop-blur-md border-default-200 lg:hidden"
+          className="fixed top-4 left-4 z-40 shadow-md bg-light-background/80 dark:bg-dark-background/80 backdrop-blur-md border-light-divider dark:border-dark-divider lg:hidden"
           onClick={toggleSidebar}
         >
           <ChevronRightIcon size={18} />
@@ -190,29 +184,29 @@ export const Sidebar = ({ className }: SidebarProps) => {
       <aside
         id="sidebar"
         className={clsx(
-          " sticky  top-0 flex flex-col h-screen bg-gradient-to-b from-background to-content1/70 backdrop-blur-md border-r border-divider transition-all duration-75 ease-in-out z-50 shadow-md",
+          "sticky top-0 flex flex-col h-screen bg-light-content1 dark:bg-dark-content1 border-r border-light-divider dark:border-dark-divider transition-all duration-200 ease-in-out z-50",
           {
-            " md:relative inset-y-0 left-0": true,
-            "w-48": !collapsed,
+            "md:relative inset-y-0 left-0": true,
+            "w-56": !collapsed,
             "w-16": collapsed && !isMobile,
             "-translate-x-full": isMobile && !open,
             "translate-x-0": isMobile && open,
+            "shadow-md": true,
           },
           className
         )}
       >
         {/* Header with glowing effect */}
         <div className={clsx(
-          "flex items-center h-16 px-4 relative ",
+          "flex items-center h-16 px-4 relative",
           collapsed && !isMobile ? "justify-center" : "justify-between"
         )}>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/10 to-transparent opacity-50 "></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/10 dark:from-primary-500/5 to-transparent"></div>
           
           {(!collapsed || isMobile) && (
-            <NextLink href="/" className="flex items-center gap-2 " onClick={handleNavItemClick}>
-              <div className="relative">
-                <Logo size={36} />
-                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full opacity-30"></div>
+            <NextLink href="/" className="flex items-center gap-2 z-10" onClick={handleNavItemClick}>
+              <div className="relative glow-primary">
+                <Logo size={32} className="text-primary-500" />
               </div>
               <span className="font-bold text-xl tracking-tight">ACME</span>
             </NextLink>
@@ -220,9 +214,8 @@ export const Sidebar = ({ className }: SidebarProps) => {
           
           {collapsed && !isMobile && (
             <NextLink href="/" className="flex items-center justify-center z-10">
-              <div className="relative">
-                <Logo size={36} />
-                <div className="absolute inset-0 bg-primary/30 blur-xl rounded-full opacity-30"></div>
+              <div className="relative glow-primary">
+                <Logo size={32} className="text-primary-500" />
               </div>
             </NextLink>
           )}
@@ -245,7 +238,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1  py-4 px-2 space-y-6 z-10">
+        <div className="flex-1 py-4 px-2 space-y-6 z-10">
           {/* Collapse button for collapsed mode */}
           {(collapsed && !isMobile) && (
             <div className="flex justify-center px-1">
@@ -254,7 +247,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
                 variant="light"
                 radius="md"
                 size="sm"
-                className="text-default-500 p-0 "
+                className="text-default-500 p-0"
                 onClick={toggleSidebar}
               >
                 <HugeiconsSidebarRight01 className="w-5 h-5" />
@@ -264,16 +257,16 @@ export const Sidebar = ({ className }: SidebarProps) => {
 
           {/* Navigation items by category */}
           {navigationCategories.map((category, categoryIndex) => (
-            <div key={categoryIndex} className=" w-full ">
+            <div key={categoryIndex} className="w-full">
               {/* Category title - only show when expanded */}
               {(!collapsed || isMobile) && (
-                <h3 className="text-xs uppercase text-default-400 font-medium tracking-wider px-4 mb-2">
+                <h3 className="text-xs uppercase text-default-400 dark:text-default-500 font-medium tracking-wider px-4 mb-2">
                   {category.title}
                 </h3>
               )}
               
               {/* Category items */}
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {category.items.map((item) => (
                   <div 
                     key={item.href}
@@ -283,10 +276,10 @@ export const Sidebar = ({ className }: SidebarProps) => {
                   >
                     {/* Tooltip for collapsed mode */}
                     {(collapsed && !isMobile && hoveredItem === item.href) && (
-                      <div className="absolute left-14 top-1/2 -translate-y-1/2 z-50 bg-content2 text-foreground px-3 py-2 rounded-md shadow-lg text-xs whitespace-nowrap">
+                      <div className="absolute left-14 top-1/2 -translate-y-1/2 z-50 bg-light-content2 dark:bg-dark-content2 text-light-foreground dark:text-dark-foreground px-3 py-2 rounded-md shadow-lg text-xs whitespace-nowrap">
                         {item.label}
                         {item.badge && (
-                          <span className={`ml-2 inline-block px-1.5 py-0.5 text-xs rounded-full bg-${item.badge.color} text-white`}>
+                          <span className="ml-2 inline-block px-1.5 py-0.5 text-xs rounded-full bg-primary-500 text-white">
                             {item.badge.text}
                           </span>
                         )}
@@ -297,31 +290,29 @@ export const Sidebar = ({ className }: SidebarProps) => {
                       href={item.href}
                       as={NextLink}
                       isIconOnly={collapsed && !isMobile}
-                      
                       startContent={
-                         !collapsed && !isMobile && <div className={clsx(
+                        !collapsed && !isMobile && <div className={clsx(
                           "flex items-center justify-center",
-                          pathname === item.href && "text-primary"
+                          pathname === item.href && "text-primary-500"
                         )}>
                           {item.icon}
                         </div>
                       }
                       endContent={
                         (!collapsed || isMobile) && item.badge && (
-                          <span className={`ml-2 inline-block px-1.5 py-0.5 text-xs rounded-full bg-${item.badge.color} text-white`}>
+                          <span className="ml-2 inline-block px-1.5 py-0.5 text-xs rounded-full bg-primary-500 text-white">
                             {item.badge.text}
                           </span>
-                      
                         )
                       }
                       variant={pathname === item.href ? "flat" : "light"}
                       color={pathname === item.href ? "primary" : "default"}
                       radius="lg"
                       className={clsx(
-                        " w-full text-sm flex items-center",
+                        "w-full text-sm flex items-center",
                         collapsed && !isMobile ? "px-0 justify-center" : "px-3 justify-start",
                         pathname === item.href ? "font-medium" : "",
-                        pathname === item.href && "bg-primary/10"
+                        pathname === item.href && "bg-primary-500/10"
                       )}
                       onClick={handleNavItemClick}
                     >
@@ -330,11 +321,11 @@ export const Sidebar = ({ className }: SidebarProps) => {
                       )}
 
                       {collapsed && !isMobile && <div className={clsx(
-                          "flex items-center justify-center  px-4",
-                          pathname === item.href && "text-primary"
-                        )}>
-                          {item.icon}
-                        </div>}
+                        "flex items-center justify-center px-4",
+                        pathname === item.href && "text-primary-500"
+                      )}>
+                        {item.icon}
+                      </div>}
                     </Button>
                   </div>
                 ))}
@@ -348,11 +339,9 @@ export const Sidebar = ({ className }: SidebarProps) => {
           <Divider className="mb-4 px-4" />
           
           <div className={clsx(
-            "p-2 ",
+            "p-2",
             collapsed && !isMobile ? "items-center justify-center" : "items-start"
           )}>
-     
-            
             {/* User menu items */}
             <div className="space-y-1">
               {userMenuItems.map((item) => (
@@ -364,7 +353,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
                 >
                   {/* Tooltip for collapsed mode */}
                   {(collapsed && !isMobile && hoveredItem === item.href) && (
-                    <div className="absolute left-14 top-1/2 -translate-y-1/2 z-50 bg-content2 text-foreground px-3 py-2 rounded-md shadow-lg text-xs whitespace-nowrap">
+                    <div className="absolute left-14 top-1/2 -translate-y-1/2 z-50 bg-light-content2 dark:bg-dark-content2 text-light-foreground dark:text-dark-foreground px-3 py-2 rounded-md shadow-lg text-xs whitespace-nowrap">
                       {item.label}
                     </div>
                   )}
@@ -378,7 +367,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
                     color="default"
                     radius="lg"
                     className={clsx(
-                      " w-full text-xs ", 
+                      "w-full text-xs font-semibold", 
                       collapsed && !isMobile ? "px-1 justify-center" : "px-4 justify-start"
                     )}
                     onClick={handleNavItemClick}

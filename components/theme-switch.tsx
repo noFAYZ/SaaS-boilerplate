@@ -42,7 +42,7 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
     <Component
       {...getBaseProps({
         className: clsx(
-          "px-px transition-opacity hover:opacity-80 cursor-pointer",
+          "px-px transition-all hover:opacity-90 cursor-pointer",
           className,
           classNames?.base,
         ),
@@ -61,7 +61,6 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
               "rounded-lg",
               "flex items-center justify-center",
               "group-data-[selected=true]:bg-transparent",
-              "!text-default-500",
               "pt-px",
               "px-0",
               "mx-0",
@@ -71,9 +70,15 @@ export const ThemeSwitch: FC<ThemeSwitchProps> = ({
         })}
       >
         {!isSelected || isSSR ? (
-          <SunFilledIcon size={24} className="text-amber-500 shadow-md backdrop:blur-xl shadow-orange-500"/>
+          <div className="relative">
+            <SunFilledIcon size={22} className="text-orange-500" />
+            <div className="absolute inset-0 bg-orange-500/20 blur-md rounded-full opacity-60"></div>
+          </div>
         ) : (
-          <MoonFilledIcon size={24} />
+          <div className="relative">
+            <MoonFilledIcon size={22} className="text-default-600" />
+            <div className="absolute inset-0 bg-default-600/10 blur-md rounded-full opacity-40"></div>
+          </div>
         )}
       </div>
     </Component>

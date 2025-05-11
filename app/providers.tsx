@@ -25,10 +25,14 @@ declare module "@react-types/shared" {
 
 export function Providers({ children, themeProps }: ProvidersProps) {
   const router = useRouter();
+  const themes = ["light", "dark", "orange-dark"];
 
   return (
     <HeroUIProvider navigate={router.push}>
-      <NextThemesProvider {...themeProps}>
+      <NextThemesProvider attribute="class" 
+        defaultTheme="orange-dark" 
+        themes={themes}
+        {...themeProps}>
         <AuthProvider>
      
             {children}  

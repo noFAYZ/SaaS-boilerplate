@@ -4,13 +4,9 @@ export const title = tv({
   base: "tracking-tight inline font-semibold",
   variants: {
     color: {
-      violet: "from-[#FF1CF7] to-[#b249f8]",
-      yellow: "from-[#FF705B] to-[#FFB457]",
-      blue: "from-[#5EA2EF] to-[#0072F5]",
-      cyan: "from-[#00b7fa] to-[#01cfea]",
-      green: "from-[#6FEE8D] to-[#17c964]",
-      pink: "from-[#FF72E1] to-[#F54C7A]",
-      foreground: "dark:from-[#FFFFFF] dark:to-[#4B4B4B]",
+      primary: "from-orange-400 to-orange-600",
+      secondary: "from-zinc-500 to-zinc-700 dark:from-zinc-400 dark:to-zinc-200",
+      foreground: "from-zinc-800 to-zinc-900 dark:from-zinc-100 dark:to-zinc-300",
     },
     size: {
       sm: "text-3xl lg:text-4xl",
@@ -23,16 +19,13 @@ export const title = tv({
   },
   defaultVariants: {
     size: "md",
+    color: "foreground",
   },
   compoundVariants: [
     {
       color: [
-        "violet",
-        "yellow",
-        "blue",
-        "cyan",
-        "green",
-        "pink",
+        "primary",
+        "secondary",
         "foreground",
       ],
       class: "bg-clip-text text-transparent bg-gradient-to-b",
@@ -41,7 +34,7 @@ export const title = tv({
 });
 
 export const subtitle = tv({
-  base: "w-full md:w-1/2 my-2 text-lg lg:text-xl text-default-600 block max-w-full",
+  base: "w-full md:w-1/2 my-2 text-lg lg:text-xl text-light-foreground/70 dark:text-dark-foreground/70 block max-w-full",
   variants: {
     fullWidth: {
       true: "!w-full",
@@ -49,5 +42,29 @@ export const subtitle = tv({
   },
   defaultVariants: {
     fullWidth: true,
+  },
+});
+
+export const card = tv({
+  base: "rounded-xl border border-light-divider dark:border-dark-divider bg-light-content1 dark:bg-dark-content1 shadow-sm overflow-hidden",
+  variants: {
+    clickable: {
+      true: "transition-all duration-200 hover:shadow-md hover:border-primary-500/50 cursor-pointer",
+    },
+    flat: {
+      true: "border-0 shadow-none bg-transparent",
+    },
+    gradient: {
+      true: "bg-gradient-to-t from-light-content1 to-light-content2 dark:from-dark-content1 dark:to-dark-content2",
+    },
+  },
+});
+
+export const section = tv({
+  base: "py-12 md:py-16",
+  variants: {
+    compact: {
+      true: "py-8 md:py-10",
+    },
   },
 });

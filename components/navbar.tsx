@@ -30,6 +30,7 @@ import { AuthButtons } from "@/components/Auth/AuthButtons";
 import { Bell } from "lucide-react";
 import { CurrencySelector } from "./UI/CurrencySelector";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const Navbar = () => {
  // State
@@ -37,8 +38,14 @@ export const Navbar = () => {
   const [toCurrency, setToCurrency] = useState("EUR");
   const [amount, setAmount] = useState("100");
   const [variant, setVariant] = useState("flat");
-  const [size, setSize] = useState("md");
+  const [size, setSize] = useState("sm");
   const [showRates, setShowRates] = useState(true);
+    const { user, signOut, isLoading } = useAuth();
+ 
+  
+    if (isLoading) {
+      return null;
+    }
   
   // Mock exchange rate for demo
   const exchangeRate = 0.93;
@@ -78,7 +85,7 @@ export const Navbar = () => {
   );
 
   return (
-    <HeroUINavbar maxWidth="xl" position="sticky">
+    <HeroUINavbar maxWidth="xl" position="static">
       <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
      {/*    <ul className="hidden lg:flex gap-4 justify-start ml-2">
@@ -121,12 +128,12 @@ export const Navbar = () => {
                     variant={variant as any}
                     size={size as any}
                 
-              className=" max-w-xs"
+              className=" max-w-xs "
             />
 
           <ThemeSwitch />
         <NavbarItem className="hidden md:flex bg-default-100 px-1 py-1  rounded-3xl gap-2 items-center align-middle">
-          <Button
+          {user &&(  <>      <Button
           isIconOnly
           radius="full"
           variant="flat"
@@ -136,7 +143,9 @@ export const Navbar = () => {
 <Bell className="text-default-500 w-4 h-4" />
           </Button>
 
-<span className="text-sm font-normal text-default-600">Hi, Faizan</span>
+<span className="text-sm font-normal text-default-600">Hi, Faizan</span></>)}
+    
+
           <AuthButtons />
         </NavbarItem>
         

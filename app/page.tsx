@@ -1,81 +1,142 @@
-import { title, subtitle } from "@/components/primitives";
-import { Card, CardBody, CardHeader, CardFooter } from "@heroui/card";
+import { Link } from "@heroui/link";
+import { Snippet } from "@heroui/snippet";
+import { Code } from "@heroui/code";
+import { button as buttonStyles } from "@heroui/theme";
+import { Card, CardBody, CardFooter, CardHeader } from "@heroui/card";
 import { Divider } from "@heroui/divider";
-import { Button } from "@heroui/button";
-import { Progress } from "@heroui/progress";
-import { 
-  TrendingUpIcon, 
-  UserPlusIcon, 
-  ShoppingCartIcon, 
-  DollarSignIcon 
-} from "lucide-react";
 
-export default function DashboardPage() {
-  // Sample statistics data
-  const stats = [
-    {
-      title: "Total Revenue",
-      value: "$24,423",
-      change: "+12.5%",
-      icon: <DollarSignIcon className="text-primary" />,
-      positive: true,
-    },
-    {
-      title: "New Customers",
-      value: "2,149",
-      change: "+18.2%",
-      icon: <UserPlusIcon className="text-success" />,
-      positive: true,
-    },
-    {
-      title: "Active Projects",
-      value: "42",
-      change: "+8.1%",
-      icon: <TrendingUpIcon className="text-warning" />,
-      positive: true,
-    },
-    {
-      title: "Pending Orders",
-      value: "12",
-      change: "-2.4%",
-      icon: <ShoppingCartIcon className="text-danger" />,
-      positive: false,
-    },
-  ];
+import { siteConfig } from "@/config/site";
+import { title, subtitle, card } from "@/components/primitives";
+import { GithubIcon } from "@/components/icons";
 
-  // Sample projects data
-  const projects = [
-    {
-      name: "Website Redesign",
-      progress: 75,
-      status: "In Progress",
-    },
-    {
-      name: "Mobile App Development",
-      progress: 32,
-      status: "In Progress",
-    },
-    {
-      name: "Marketing Campaign",
-      progress: 100,
-      status: "Completed",
-    },
-    {
-      name: "Database Migration",
-      progress: 58,
-      status: "In Progress",
-    },
-  ];
-
+export default function Home() {
   return (
-    < >
-      <div className="flex flex-col gap-2">
-        <h3 className='text-3xl font-semibold'>Dashboard</h3>
-        <p className="text-default-500">Welcome back! Here's an overview of your progress today.</p>
+    <section className="flex flex-col items-center justify-center gap-8 py-8 md:py-10">
+      <div className="inline-block max-w-xl text-center justify-center">
+        <div className="mb-2">
+          <span className="inline-block px-3 py-1 mb-4 text-xs font-medium rounded-full bg-primary-500/10 text-primary-500">
+            Welcome to ACME Finance
+          </span>
+        </div>
+        <span className={title({ color: "foreground" })}>Modern&nbsp;</span>
+        <span className={title({ color: "primary" })}>Finance&nbsp;</span>
+        <br />
+        <span className={title({ color: "foreground" })}>
+          for the digital age.
+        </span>
+        <div className={subtitle({ class: "mt-4" })}>
+          Beautiful, fast, and reliable financial tracking built for modern businesses.
+        </div>
       </div>
 
+      <div className="flex gap-3">
+        <Link
+          isExternal
+          className={buttonStyles({
+            color: "default",
+            radius: "full",
+            variant: "shadow",
+            size: "lg",
+          })}
+          href={siteConfig.links.docs}
+        >
+          Get Started
+        </Link>
+        <Link
+          isExternal
+          className={buttonStyles({ 
+            variant: "bordered", 
+            radius: "full",
+            size: "lg",
+          })}
+          href={siteConfig.links.github}
+        >
+          <GithubIcon size={20} />
+          View on GitHub
+        </Link>
+      </div>
 
-   
-    </>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl mt-10">
+        {/* Feature Card 1 */}
+        <Card className={card({ clickable: true })}>
+          <CardHeader className="flex gap-3">
+            <div className="flex flex-col">
+              <p className="text-md font-semibold">Portfolio Management</p>
+              <p className="text-small text-default-500">Track all your investments</p>
+            </div>
+          </CardHeader>
+          <Divider/>
+          <CardBody>
+            <p className="text-md font-normal">Monitor portfolio performance with real-time market data and custom alerts.</p>
+          </CardBody>
+          <CardFooter>
+            <Link 
+              href="/portfolios" 
+              color="primary" 
+              className="text-sm"
+              showAnchorIcon
+            >
+              Explore portfolios
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Feature Card 2 */}
+        <Card className={card({ clickable: true })}>
+          <CardHeader className="flex gap-3">
+            <div className="flex flex-col">
+              <p className="text-md font-semibold">Financial Analytics</p>
+              <p className="text-small text-default-500">Insights that matter</p>
+            </div>
+          </CardHeader>
+          <Divider/>
+          <CardBody>
+            <p>Advanced analytics with customizable visualizations to understand your finances better.</p>
+          </CardBody>
+          <CardFooter>
+            <Link 
+              href="/analytics" 
+              color="primary" 
+              className="text-sm"
+              showAnchorIcon
+            >
+              View analytics
+            </Link>
+          </CardFooter>
+        </Card>
+
+        {/* Feature Card 3 */}
+        <Card className={card({ clickable: true })}>
+          <CardHeader className="flex gap-3">
+            <div className="flex flex-col">
+              <p className="text-md font-semibold">Account Management</p>
+              <p className="text-small text-default-500">Simplified banking</p>
+            </div>
+          </CardHeader>
+          <Divider/>
+          <CardBody>
+            <p>Connect your accounts seamlessly and manage all your finances in one place.</p>
+          </CardBody>
+          <CardFooter>
+            <Link 
+              href="/accounts" 
+              color="primary" 
+              className="text-sm"
+              showAnchorIcon
+            >
+              Manage accounts
+            </Link>
+          </CardFooter>
+        </Card>
+      </div>
+
+      <div className="mt-8">
+        <Snippet hideCopyButton hideSymbol variant="flat" className="bg-primary-500/5 border-primary-500/20">
+          <span>
+            Get started by editing <Code color="primary">app/page.tsx</Code>
+          </span>
+        </Snippet>
+      </div>
+    </section>
   );
 }

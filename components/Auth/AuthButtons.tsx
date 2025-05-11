@@ -12,6 +12,7 @@ import {
   DropdownItem 
 } from '@heroui/dropdown';
 import { useRouter } from 'next/navigation';
+import { IconParkOutlineLockOne } from '../icons/icons';
 
 interface AuthButtonsProps {
   isMobile?: boolean;
@@ -71,6 +72,7 @@ export const AuthButtons: FC<AuthButtonsProps> = ({ isMobile = false }) => {
           as={Link} 
           color="primary" 
           href="/login" 
+          radius='full'
           variant="flat" 
           className="w-full mb-2"
         >
@@ -80,8 +82,9 @@ export const AuthButtons: FC<AuthButtonsProps> = ({ isMobile = false }) => {
           as={Link} 
           color="primary" 
           href="/login" 
+          radius='full'
           variant="solid" 
-          className="w-full"
+          className="w-full rounded-full"
         >
           Sign Up
         </Button>
@@ -95,21 +98,16 @@ export const AuthButtons: FC<AuthButtonsProps> = ({ isMobile = false }) => {
         as={Link} 
         color="primary" 
         href="/login" 
-        variant="flat" 
+        variant="solid" 
+           radius='full'
         size="sm"
-        className="mr-1"
+        className="items-center font-bold "
+        startContent={<IconParkOutlineLockOne className="w-4 h-4" />}
       >
+        
         Login
       </Button>
-      <Button 
-        as={Link} 
-        color="primary" 
-        href="/login" 
-        variant="solid" 
-        size="sm"
-      >
-        Sign Up
-      </Button>
+    
     </>
   );
 };
