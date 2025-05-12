@@ -169,7 +169,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
               <div className="relative glow-primary">
                 <Logo size={32} className="text-primary-500" />
               </div>
-              <span className="font-bold text-xl tracking-tight">ACME</span>
+              <span className="font-bold text-lg tracking-tight">MoneyMappr</span>
             </NextLink>
           )}
           

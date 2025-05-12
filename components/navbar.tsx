@@ -166,12 +166,13 @@ export const Navbar = () => {
   return (
     <>
       <HeroUINavbar 
-        maxWidth="xl" 
-        position="sticky"
+        maxWidth="2xl" 
+        position="static"
         className={clsx(
-          "bg-background/70 backdrop-blur-md transition-shadow duration-0 z-40",
-          isScrolled && "shadow-sm border-b border-default-200/50",
+          "bg-background backdrop-blur-md transition-shadow duration-0 z-40",
+         
         )}
+        shouldHideOnScroll
       >
         <NavbarContent className="basis-1/5 sm:basis-full" justify="start">
           {/* Logo and toggle - adjust based on sidebar visibility */}
@@ -188,7 +189,7 @@ export const Navbar = () => {
                   <div className="relative glow-primary">
                     <Logo size={30} className="text-primary-500" />
                   </div>
-                  <span className="font-bold text-xl tracking-tight">ACME</span>
+                  <span className="font-bold text-xl tracking-tight">MoneyMappr</span>
                 </NextLink>
               </NavbarItem>
             )}
