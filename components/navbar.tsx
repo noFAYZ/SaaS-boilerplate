@@ -178,7 +178,7 @@ export const Navbar = () => {
           {/* Logo and toggle - adjust based on sidebar visibility */}
           <div className="flex items-center gap-2">
             {/* Toggle sidebar/navbar button */}
-            {!isSidebarDisabled && (
+            {isSidebarDisabled && (
               <NavigationToggle variant="button" className="hidden sm:flex" />
             )}
 

@@ -1,14 +1,12 @@
-// app/wallets/page.tsx
+// app/wallets/page.tsx - Redesigned Modern Version
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardBody, CardHeader } from '@heroui/card';
+import { Card, CardBody } from '@heroui/card';
 import { Button } from '@heroui/button';
-import { Tabs, Tab } from '@heroui/tabs';
 import { Badge } from '@heroui/badge';
 import { useWallets } from '@/contexts/WalletContext';
 import { WalletGrid } from '@/components/Wallets/WalletGrid';
-import { WalletAnalytics } from '@/components/Wallets/WalletAnalytics';
 import { title } from '@/components/primitives';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { 
@@ -20,38 +18,70 @@ import {
   Activity,
   RefreshCw,
   Eye,
-  EyeOff
+  EyeOff,
+  Plus,
+  ArrowRight,
+  Target,
+  Sparkles,
+  Zap,
+  Globe,
+  Timer,
+  Award,
+  Layers,
+  Coins,
+  Network,
+  PieChart,
+  Star,
+  ChevronUp,
+  ChevronDown,
+  Flame,
+  Shield
 } from 'lucide-react';
-import { Chip } from '@heroui/react';
+import { useRouter } from 'next/navigation';
+import { Progress } from '@heroui/progress';
+import { Divider } from '@heroui/divider';
+import { SolarWalletOutline } from '@/components/icons/icons';
+import { AddWalletModal } from '@/components/Wallets/AddWalletModal';
 
 export default function WalletsPage() {
   const { state, actions } = useWallets();
   const [showBalance, setShowBalance] = useState(true);
-  const [selectedTab, setSelectedTab] = useState<string>('overview');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [statsView, setStatsView] = useState<'overview' | 'detailed'>('overview');
+  const router = useRouter();
 
-
-
-  // Calculate portfolio overview
+  // Calculate enhanced portfolio overview
   const portfolioOverview = {
-    totalValue: state.summaries.reduce((sum, wallet) => sum + wallet.totalValue, 0),
-    totalChange: state.summaries.reduce((sum, wallet) => sum + wallet.dayChange, 0),
+    totalValue: state.summaries.reduce((sum, wallet) => sum + (wallet.totalValue?.positions || 0), 0),
+    totalChange: state.summaries.reduce((sum, wallet) => sum + (wallet.dayChange || 0), 0),
     totalWallets: state.summaries.length,
-    positiveWallets: state.summaries.filter(w => w.dayChange >= 0).length
+    positiveWallets: state.summaries.filter(w => (w.dayChange || 0) >= 0).length,
+    highValueWallets: state.summaries.filter(w => (w.totalValue || 0) >= 100000).length,
+    totalPositions: state.summaries.reduce((sum, wallet) => sum + (wallet.positionsCount || 0), 0),
+    uniqueChains: Math.max(...state.summaries.map(w => w.chainsCount || 0), 0),
+    avgWalletValue: state.summaries.length > 0 ? state.summaries.reduce((sum, w) => sum + (w.totalValue || 0), 0) / state.summaries.length : 0,
+    topPerformer: state.summaries.reduce((best, wallet) => 
+      (wallet.dayChangePercent || 0) > (best?.dayChangePercent || -Infinity) ? wallet : best
+    , null),
+    worstPerformer: state.summaries.reduce((worst, wallet) => 
+      (wallet.dayChangePercent || 0) < (worst?.dayChangePercent || Infinity) ? wallet : worst
+    , null)
   };
 
   const totalChangePercent = portfolioOverview.totalValue > 0 
     ? (portfolioOverview.totalChange / portfolioOverview.totalValue) * 100 
     : 0;
 
-  // Auto-select analytics tab when a wallet is selected
-  useEffect(() => {
-    if (state.selectedWallet && selectedTab === 'overview') {
-      setSelectedTab('analytics');
-    }
-  }, [state.selectedWallet]);
+    console.log(state.summaries)
 
-  const formatCurrency = (value: number) => {
+  const formatCurrency = (value: number, compact = false) => {
     if (!showBalance) return '••••••';
+    
+    if (compact) {
+      if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+      if (value >= 1000) return `$${(value / 1000).toFixed(1)}K`;
+      return `$${value.toFixed(0)}`;
+    }
     
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -68,356 +98,237 @@ export default function WalletsPage() {
   return (
     <ProtectedRoute>
       <div className="space-y-8">
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className={title()}>Portfolio Tracker</h1>
-            <p className="mt-2 text-default-500">
-              Monitor your DeFi portfolio across multiple wallets and chains
-            </p>
-          </div>
+        {/* Modern Header */}
+        <div className="relative ">
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 via-purple-500/5 to-blue-500/5 rounded-2xl"></div>
           
-          <div className="flex items-center gap-2">
-            <Button
-              variant="flat"
-              size="sm"
-              isIconOnly
-              onPress={() => setShowBalance(!showBalance)}
-              className="text-default-500"
-            >
-              {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            </Button>
-            <Button
-              variant="flat"
-              startContent={<RefreshCw className="w-4 h-4" />}
-              onPress={actions.refreshAllWallets}
-              isLoading={state.isLoading}
-              size="sm"
-            >
-              Refresh All
-            </Button>
+          <div className="relative p-2 md:p-4 border rounded-2xl dark:border-default">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              <div className="space-y-4">
+                <div className="flex items-center gap-4">
+         
+                  
+                  <div>
+                    <p className="text-xs  font-bold text-default-900 dark:text-white">
+                     Total Networth
+                    </p>
+                    <h1 className="text-default-600 mt-1 text-2xl font-bold">
+                      {portfolioOverview.totalValue > 0 ? formatCurrency(portfolioOverview.totalValue, true) : 'No data'}
+                    </h1>
+                  </div>
+                </div>
+
+                {/* Quick Stats Bar */}
+                <div className="flex flex-wrap items-center gap-4 text-sm">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                    <span className="font-medium">{portfolioOverview.positiveWallets} gaining</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="font-medium">{portfolioOverview.totalWallets - portfolioOverview.positiveWallets} declining</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Layers className="w-4 h-4 text-primary-500" />
+                    <span className="font-medium">{portfolioOverview.totalPositions} positions</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Network className="w-4 h-4 text-purple-500" />
+                    <span className="font-medium">{portfolioOverview.uniqueChains}+ networks</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="flat"
+                  size="sm"
+                  isIconOnly
+                  onPress={() => setShowBalance(!showBalance)}
+                  className=" backdrop-blur-sm"
+                >
+                  {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                </Button>
+                
+                <Button
+                  variant="flat"
+                  startContent={<RefreshCw className={`w-4 h-4 ${state.isLoading ? 'animate-spin' : ''}`} />}
+                  onPress={actions.refreshAllWallets}
+                 
+                  size="sm"
+                  className="font-medium text-xs backdrop-blur-sm"
+                >
+                  Sync All
+                </Button>
+                
+                <Button
+                variant='shadow'
+                  
+                  startContent={<Plus className="w-4 h-4" />}
+                  size="sm"
+                  className="font-medium text-xs shadow-lg "
+                  onPress={() => setIsAddModalOpen(true)}
+                >
+                  Add Wallet
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Portfolio Overview Cards */}
-        {state.summaries.length > 0 && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="border border-default-200">
-              <CardBody className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-lg bg-primary-500/10">
-                    <DollarSign className="w-5 h-5 text-primary-500" />
-                  </div>
-                  <Badge 
-                    variant="flat" 
-                    color={portfolioOverview.totalChange >= 0 ? 'success' : 'danger'}
-                    className="text-xs"
-                  >
-                    24h
-                  </Badge>
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-xs text-default-500 mb-1">Total Portfolio Value</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(portfolioOverview.totalValue)}
-                  </p>
-                  <div className={`flex items-center gap-1 mt-1 text-sm ${
-                    portfolioOverview.totalChange >= 0 ? 'text-success' : 'text-danger'
-                  }`}>
-                    {portfolioOverview.totalChange >= 0 ? (
-                      <TrendingUp className="w-3 h-3" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3" />
-                    )}
-                    <span>
-                      {showBalance ? formatCurrency(Math.abs(portfolioOverview.totalChange)) : '••••'}
-                    </span>
-                    <span>({formatPercent(totalChangePercent)})</span>
-                  </div>
-                </div>
-              </CardBody>
-            </Card>
+      
 
-            <Card className="border border-default-200">
-              <CardBody className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-lg bg-success/10">
-                    <Wallet className="w-5 h-5 text-success" />
-                  </div>
-                  <Badge variant="flat" color="default" className="text-xs">
-                    Active
-                  </Badge>
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-xs text-default-500 mb-1">Total Wallets</p>
-                  <p className="text-2xl font-bold">{portfolioOverview.totalWallets}</p>
-                  <p className="text-sm text-default-500 mt-1">
-                    {portfolioOverview.positiveWallets} gaining today
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card className="border border-default-200">
-              <CardBody className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-lg bg-warning/10">
-                    <BarChart3 className="w-5 h-5 text-warning" />
-                  </div>
-                  <Badge variant="flat" color="warning" className="text-xs">
-                    Avg
-                  </Badge>
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-xs text-default-500 mb-1">Avg Wallet Value</p>
-                  <p className="text-2xl font-bold">
-                    {formatCurrency(
-                      portfolioOverview.totalWallets > 0 
-                        ? portfolioOverview.totalValue / portfolioOverview.totalWallets 
-                        : 0
-                    )}
-                  </p>
-                  <p className="text-sm text-default-500 mt-1">
-                    Per wallet average
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-
-            <Card className="border border-default-200">
-              <CardBody className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="p-2 rounded-lg bg-secondary/10">
-                    <Activity className="w-5 h-5 text-secondary" />
-                  </div>
-                  <Badge variant="flat" color="secondary" className="text-xs">
-                    Live
-                  </Badge>
-                </div>
-                
-                <div className="mt-3">
-                  <p className="text-xs text-default-500 mb-1">Best Performer</p>
-                  <p className="text-2xl font-bold">
-                    {state.summaries.length > 0 
-                      ? `${Math.max(...state.summaries.map(w => w.dayChangePercent)).toFixed(2)}%`
-                      : '0.00%'
-                    }
-                  </p>
-                  <p className="text-sm text-default-500 mt-1">
-                    24h change
-                  </p>
-                </div>
-              </CardBody>
-            </Card>
-          </div>
-        )}
-
-        {/* Main Content Tabs */}
-        <Tabs 
-          selectedKey={selectedTab}
-          onSelectionChange={(key) => setSelectedTab(key as string)}
-          className='rounded-full'
-
-          classNames={{
-       base: 'bg-default-50 border border-default-200 shadow-sm rounded-full',
-       tabList: 'flex items-center justify-between p-1 rounded-full',
-            tab: 'px-4 py-2 text-sm font-medium rounded-full ',
-            tabWrapper: 'flex items-center gap-2 rounded-full',
-            cursor: 'cursor-pointer rounded-full',
-            
-           
-     
-     
-          }}
-       
-       
-        >
-          <Tab 
-            key="overview" 
-            className='rounded-full'
-            title={
-              <div className="flex items-center gap-2">
-                <Wallet className="w-4 h-4" />
-                <span>Overview</span>
-                {state.summaries.length > 0 && (
-                  <Chip size="sm" variant="solid" color="danger" className='text-xs'>
-                    {state.summaries.length}
-                  </Chip>
-                )}
-              </div>
-            }
-
-            
-          >
-            <div className="mt-6">
-              <WalletGrid />
-            </div>
-          </Tab>
-
-          <Tab 
-            key="analytics" 
-            title={
-              <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4" />
-                <span>Analytics</span>
-                {state.selectedWallet && (
-                  <Badge size="sm" variant="flat" color="success">
-                    Active
-                  </Badge>
-                )}
-              </div>
-            }
-          >
-            <div className="mt-6">
-              {state.selectedWallet ? (
-                <WalletAnalytics address={state.selectedWallet} />
-              ) : (
-                <WalletAnalyticsPlaceholder />
-              )}
-            </div>
-          </Tab>
-
-          <Tab 
-            key="insights" 
-            title={
-              <div className="flex items-center gap-2">
-                <Activity className="w-4 h-4" />
-                <span>Insights</span>
-                <Badge size="sm" variant="flat" color="warning">
-                  Pro
-                </Badge>
-              </div>
-            }
-          >
-            <div className="mt-6">
-              <PortfolioInsights />
-            </div>
-          </Tab>
-        </Tabs>
-
-        {/* Quick Actions Footer */}
+        {/* Status Bar 
         {state.summaries.length > 0 && (
           <Card className="">
-            <CardBody className="p-6">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-lg font-semibold mb-1">Portfolio Status</h3>
-                  <p className="text-sm text-default-600">
-                    Your portfolio is being tracked across {portfolioOverview.totalWallets} wallets. 
-                    Last updated {state.lastRefresh ? new Date(state.lastRefresh).toLocaleTimeString() : 'never'}.
-                  </p>
-                </div>
-                
-                <div className="flex items-center gap-3">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-default-700">Status</p>
-                    <Badge 
-                      color={state.error ? 'danger' : 'success'} 
-                      variant="flat"
-                      className="mt-1"
-                    >
-                      {state.error ? 'Error' : 'Synced'}
+            <CardBody className="p-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs font-medium text-default-700">Live Data</span>
+                    </div>
+                    <Badge variant="flat" color="success" size="sm" className="ml-2 text-xs font-medium">
+                      Synced
                     </Badge>
                   </div>
                   
+                  <div className="hidden sm:block w-px h-4 bg-default-300"></div>
+                  
+                  <div className="text-sm text-default-500">
+                    Last sync: {state.lastRefresh ? new Date(state.lastRefresh).toLocaleTimeString() : 'Never'}
+                  </div>
+                </div>
+                
+                <div className="flex items-center gap-2">
                   <Button
-                    color="primary"
+                    size="sm"
                     variant="flat"
-                    onPress={actions.refreshAllWallets}
-                    isLoading={state.isLoading}
-                    startContent={<RefreshCw className="w-4 h-4" />}
+                    color="primary"
+                    startContent={<BarChart3 className="w-4 h-4" />}
+                    onPress={() => router.push('/analytics')}
+                    className="font-medium"
                   >
-                    Sync Now
+                    Analytics
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    startContent={<Zap className="w-4 h-4" />}
+                    className="font-medium"
+                  >
+                    Optimize
                   </Button>
                 </div>
               </div>
             </CardBody>
           </Card>
+        )}*/}
+
+        {/* Wallet Grid */}
+        <div>
+          <WalletGrid />
+        </div>
+
+        {/* Error State */}
+        {state.error && (
+          <Card className="border border-danger-200 bg-gradient-to-r from-danger-50 to-red-50 dark:from-danger-900/20 dark:to-red-900/20">
+            <CardBody className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="p-3 rounded-xl bg-danger-500/10 border border-danger-500/20">
+                  <Activity className="w-6 h-6 text-danger-500" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-danger-700 dark:text-danger-400 mb-1">
+                    Synchronization Error
+                  </h3>
+                  <p className="text-sm text-danger-600 dark:text-danger-500 mb-4">
+                    {state.error}
+                  </p>
+                  <div className="flex items-center gap-3">
+                    <Button
+                      size="sm"
+                      color="danger"
+                      variant="flat"
+                      onPress={actions.refreshAllWallets}
+                      startContent={<RefreshCw className="w-4 h-4" />}
+                    >
+                      Retry Sync
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="light"
+                      onPress={() => router.push('/help')}
+                      className="text-danger-600"
+                    >
+                      Get Help
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
         )}
+
+        {/* Empty State Enhancement */}
+        {state.summaries.length === 0 && !state.isLoading && (
+          <Card className="border-2 border-dashed border-default-300 bg-gradient-to-br from-default-50 to-default-100/50 dark:from-default-900/50 dark:to-default-800/30">
+            <CardBody className="p-12">
+              <div className="text-center max-w-md mx-auto">
+                <div className="relative mb-8">
+                  <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-primary-500 to-primary-600 flex items-center justify-center shadow-2xl shadow-primary-500/25">
+                    <Wallet className="w-12 h-12 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-full flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-white" />
+                  </div>
+                </div>
+                
+                <h3 className="text-2xl font-bold mb-3">Welcome to Portfolio Hub</h3>
+                <p className="text-default-500 mb-8 leading-relaxed">
+                  Start building your DeFi portfolio by adding your first wallet. 
+                  Track performance, analyze positions, and optimize your strategy across multiple networks.
+                </p>
+                
+                <div className="space-y-4">
+                  <Button
+                    color="primary"
+                    size="lg"
+                    onPress={() => {/* Open add wallet modal */}}
+                    startContent={<Plus className="w-5 h-5" />}
+                    className="font-semibold shadow-lg shadow-primary-500/25"
+                  >
+                    Add Your First Wallet
+                  </Button>
+                  
+                  <div className="flex items-center justify-center gap-8 text-sm text-default-400 mt-8">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      <span>Read-only Access</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Zap className="w-4 h-4" />
+                      <span>Real-time Data</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      <span>Multi-chain</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardBody>
+          </Card>
+        )}
+
+              {/* Modals */}
+      <AddWalletModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
       </div>
     </ProtectedRoute>
-  );
-}
-
-// Analytics Placeholder Component
-function WalletAnalyticsPlaceholder() {
-  return (
-    <Card className="p-12">
-      <div className="text-center max-w-md mx-auto">
-        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
-          <BarChart3 className="w-10 h-10 text-primary-600" />
-        </div>
-        
-        <h3 className="text-xl font-semibold mb-3">Select a Wallet to View Analytics</h3>
-        <p className="text-default-500 mb-6">
-          Choose any wallet from the overview tab to see detailed analytics, 
-          position breakdowns, transaction history, and performance charts.
-        </p>
-        
-        <div className="flex items-center justify-center gap-4 text-sm text-default-400">
-          <div className="flex items-center gap-1">
-            <TrendingUp className="w-4 h-4" />
-            <span>Portfolio Tracking</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Activity className="w-4 h-4" />
-            <span>Real-time Data</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <BarChart3 className="w-4 h-4" />
-            <span>Advanced Charts</span>
-          </div>
-        </div>
-      </div>
-    </Card>
-  );
-}
-
-// Portfolio Insights Component
-function PortfolioInsights() {
-  const { state } = useWallets();
-  
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <h3 className="text-lg font-semibold">Portfolio Insights</h3>
-          <p className="text-sm text-default-500">
-            Advanced analytics and recommendations for your portfolio
-          </p>
-        </CardHeader>
-        <CardBody>
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-lg bg-gradient-to-br from-warning-100 to-warning-200 flex items-center justify-center">
-              <Activity className="w-8 h-8 text-warning-600" />
-            </div>
-            
-            <h3 className="text-lg font-semibold mb-2">Coming Soon</h3>
-            <p className="text-default-500 max-w-md mx-auto">
-              Advanced portfolio insights, risk analysis, yield optimization suggestions, 
-              and automated rebalancing recommendations will be available here.
-            </p>
-            
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-lg mx-auto">
-              <div className="p-4 border border-default-200 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-success mx-auto mb-2" />
-                <p className="text-sm font-medium">Risk Analysis</p>
-              </div>
-              <div className="p-4 border border-default-200 rounded-lg">
-                <BarChart3 className="w-6 h-6 text-primary mx-auto mb-2" />
-                <p className="text-sm font-medium">Yield Optimization</p>
-              </div>
-              <div className="p-4 border border-default-200 rounded-lg">
-                <Activity className="w-6 h-6 text-warning mx-auto mb-2" />
-                <p className="text-sm font-medium">Auto Rebalancing</p>
-              </div>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
-    </div>
   );
 }

@@ -57,7 +57,7 @@ export function WalletGrid() {
 
   return (
     <div className="space-y-6">
-      {/* Header Actions */}
+      {/* Header Actions 
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Your Wallets</h2>
@@ -83,7 +83,7 @@ export function WalletGrid() {
             Add Wallet
           </Button>
         </div>
-      </div>
+      </div>*/}
 
       {/* Loading State */}
       {state.isLoading && state.summaries.length === 0 && (
