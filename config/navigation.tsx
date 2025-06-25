@@ -1,3 +1,4 @@
+// config/navigation.tsx - Updated with Wallets
 import { ReactNode } from "react";
 import { 
   RadixIconsDashboard, 
@@ -8,7 +9,7 @@ import {
   TablerHelpSquareRounded,
   CuidaLogoutOutline
 } from "@/components/icons/icons";
-import { HelpCircleIcon, ShoppingCartIcon } from "lucide-react";
+import { HelpCircleIcon, ShoppingCartIcon, Wallet } from "lucide-react";
 
 // Define types for navigation items
 export interface NavigationItem {
@@ -38,6 +39,12 @@ export const navigationItems: NavigationCategory[] = [
         badge: null,
       },
       {
+        label: "Wallets",
+        href: "/wallets",
+        icon: <Wallet className="w-5 h-5" />,
+        badge: { text: "New", color: "primary" },
+      },
+      {
         label: "Portfolios",
         href: "/portfolios",
         icon: <SolarPieChartBold className="w-5 h-5" />,
@@ -53,27 +60,10 @@ export const navigationItems: NavigationCategory[] = [
         label: "Analytics",
         href: "/analytics",
         icon: <HugeiconsAnalyticsUp className="w-5 h-5" />,
-        badge: { text: "New", color: "primary" },
+        badge: null,
       },
     ],
   },
-/*   {
-    title: "Business",
-    items: [
-      {
-        label: "Pricing",
-        href: "/pricing",
-        icon: <ShoppingCartIcon size={20} />,
-        badge: null,
-      },
-      {
-        label: "About",
-        href: "/about",
-        icon: <HelpCircleIcon size={20} />,
-        badge: null,
-      },
-    ],
-  }, */
 ];
 
 // User menu items (can be used in both sidebar and navbar)

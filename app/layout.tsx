@@ -9,6 +9,7 @@ import { fontSans } from "@/config/fonts";
 import { Navbar } from "@/components/navbar";
 import { Sidebar } from "@/components/sidebar";
 import { NavigationProvider } from "@/contexts/NavigationContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 import { Atkinson_Hyperlegible, Jost, Space_Grotesk } from 'next/font/google'
  
 const lexend = Space_Grotesk({
@@ -23,31 +24,33 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="en" className={`${lexend.className} }`}>
+    <html suppressHydrationWarning lang="en" className={`${lexend.className}`}>
       <head />
       <body
         className={clsx(
-          "antialiased ",
+          "antialiased",
         )}
       >
         <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
           <NavigationProvider>
-            <div className="flex h-screen overflow-hidden bg-gradient-to-b from-background to-background/90">
-              {/* Sidebar - controlled by NavigationContext */}
-              <Sidebar />
-              
-              {/* Main Content */}
-              <div className="flex-1 flex flex-col w-full overflow-hidden">
-                <Navbar />
+            <WalletProvider>
+              <div className="flex h-screen overflow-hidden bg-gradient-to-b from-background to-background/90">
+                {/* Sidebar - controlled by NavigationContext */}
+                <Sidebar />
                 
-                {/* Main content area with scrolling */}
-                <main className="flex-1 overflow-y-auto">
-                  <div className="container mx-auto max-w-7xl px-6 py-8">
-                    {children}
-                  </div>
-                </main>
+                {/* Main Content */}
+                <div className="flex-1 flex flex-col w-full overflow-hidden">
+                  <Navbar />
+                  
+                  {/* Main content area with scrolling */}
+                  <main className="flex-1 overflow-y-auto">
+                    <div className="container mx-auto max-w-7xl px-6 py-8">
+                      {children}
+                    </div>
+                  </main>
+                </div>
               </div>
-            </div>
+            </WalletProvider>
           </NavigationProvider>
         </Providers>
       </body>
