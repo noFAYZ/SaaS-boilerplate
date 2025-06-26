@@ -1,7 +1,12 @@
 // components/Wallets/WalletCard.tsx
+'use client';
+
 import { Card, CardBody } from '@heroui/card';
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
 import { Button } from '@heroui/button';
+import { Badge } from '@heroui/badge';
+import { Chip } from '@heroui/chip';
+import { Progress } from '@heroui/progress';
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
 import { WalletSummary } from '@/lib/zerion';
 import { 
   MoreHorizontal, 
@@ -14,235 +19,348 @@ import {
   Eye,
   Copy,
   ExternalLink,
-  Loader2,
-  Sparkles
+  Crown,
+  Star,
+  MousePointer2,
+  ArrowUpRight,
+  Activity
 } from 'lucide-react';
 import clsx from 'clsx';
 
+interface WalletTier {
+  tier: 'legendary' | 'epic' | 'common';
+  icon: React.ComponentType<any>;
+}
+
 interface WalletCardProps {
   wallet: WalletSummary;
-  isSelected?: boolean;
-  onClick?: () => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  onRefresh?: () => void;
+  viewMode: 'grid' | 'list';
+  showBalance: boolean;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClick: () => void;
+  tier: WalletTier;
   isLoading?: boolean;
 }
 
 export function WalletCard({ 
   wallet, 
-  isSelected, 
-  onClick, 
+  viewMode, 
+  showBalance, 
   onEdit, 
   onDelete, 
-  onRefresh,
-  isLoading
+  onClick,
+  tier,
+  isLoading = false
 }: WalletCardProps) {
-  const formatCurrency = (value: number) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+  const formatCurrency = (value: number | undefined | null, compact = true) => {
+    if (!showBalance) return '••••••';
+    
+    const numValue = Number(value) || 0;
+    
+    if (compact) {
+      if (numValue >= 1000000) return `$${(numValue / 1000000).toFixed(1)}M`;
+      if (numValue >= 1000) return `$${(numValue / 1000).toFixed(1)}K`;
+      return `$${numValue.toFixed(0)}`;
+    }
+    
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(value);
+    }).format(numValue);
   };
 
-  const formatPercent = (value: number) => {
-    return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+  const formatPercent = (value: number | undefined | null) => {
+    const numValue = Number(value) || 0;
+    return `${numValue >= 0 ? '+' : ''}${numValue.toFixed(1)}%`;
   };
 
-  const copyAddress = async () => {
-    try {
-      await navigator.clipboard.writeText(wallet.address);
-    } catch (err) {
-      console.error('Failed to copy address:', err);
-    }
+  const copyAddress = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(wallet.address);
   };
 
-  const openInEtherscan = () => {
+  const openEtherscan = (e: React.MouseEvent) => {
+    e.stopPropagation();
     window.open(`https://etherscan.io/address/${wallet.address}`, '_blank');
   };
 
-  const hasActivity = wallet.totalValue?.positions > 0;
-  const isPositive = wallet.dayChange >= 0;
-  const walletInitial = wallet.name?.[0]?.toUpperCase() || wallet.address[2]?.toUpperCase() || 'W';
-  const isHighValue = (wallet.totalValue?.positions || 0) >= 100000;
-
-  const getAvatarColor = () => {
-    if (isHighValue) return 'from-amber-500 to-orange-600';
-    if (hasActivity && isPositive) return 'from-emerald-500 to-teal-600';
-    if (hasActivity) return 'from-blue-500 to-indigo-600';
-    return 'from-slate-400 to-slate-600';
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onEdit();
   };
 
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onDelete();
+  };
+
+  const isPositive = (wallet.dayChange || 0) >= 0;
+  const isHighValue = (wallet.totalValue || 0) >= 100000;
+  const hasActivity = (wallet.positionsCount || 0) > 0;
+  const walletInitial = wallet.name?.[0]?.toUpperCase() || wallet.address[2]?.toUpperCase() || 'W';
+
+  if (viewMode === 'list') {
+    return (
+      <Card 
+        className="group cursor-pointer hover:shadow-md transition-all duration-75 border-default-200 hover:border-primary/50 rounded-2xl"
+        isPressable
+        onPress={onClick}
+      >
+        <CardBody className="p-4">
+          <div className="flex items-center justify-between gap-3 ">
+            {/* Left Section - Avatar & Info */}
+            <div className="flex items-center gap-4">
+              <div className="relative">
+                <div className="w-10 h-10 rounded-2xl bg-orange-500 text-primary-foreground flex items-center justify-center font-bold shadow-sm">
+                  {isHighValue ? <Crown className="w-5 h-5" /> : walletInitial}
+                </div>
+                {hasActivity && (
+                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background">
+                    <div className="w-full h-full rounded-full bg-success animate-pulse" />
+                  </div>
+                )}
+              </div>
+              
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-sm truncate">{wallet.name || 'Unnamed Wallet'}</h3>
+                  {isHighValue && (
+                    <Badge size="sm" color="warning" variant="flat">VIP</Badge>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-xs text-default-500 font-mono bg-default-100 px-2 py-1 rounded">
+                    {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+                  </p>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    className="w-5 h-5 min-w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={copyAddress}
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Middle Section - Stats */}
+            <div className="flex items-center gap-8">
+              <div className="text-center">
+                <p className="text-[11px] text-default-500 mb-1">Positions</p>
+                <p className="font-semibold text-xs">{wallet.positionsCount || 0}</p>
+              </div>
+              
+              <div className="text-center">
+                <p className="text-[11px] text-default-500 mb-1">Chains</p>
+                <p className="font-semibold text-xs">{wallet.chainsCount || 0}</p>
+              </div>
+            </div>
+
+            {/* Right Section - Value & Actions */}
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <p className="font-bold text-lg">{formatCurrency(wallet.totalValue?.positions)}</p>
+                <div className={clsx(
+                  "flex items-center gap-1 text-sm",
+                  isPositive ? 'text-success' : 'text-danger'
+                )}>
+                  {isPositive ? (
+                    <TrendingUp className="w-4 h-4" />
+                  ) : (
+                    <TrendingDown className="w-4 h-4" />
+                  )}
+                  {formatPercent(wallet.dayChangePercent)}
+                </div>
+              </div>
+
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onPress={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu>
+                  <DropdownItem key="view" startContent={<Eye className="w-4 h-4" />}>
+                    View Details
+                  </DropdownItem>
+                  <DropdownItem key="edit" startContent={<Edit3 className="w-4 h-4" />} onPress={handleEdit}>
+                    Edit Name
+                  </DropdownItem>
+                  <DropdownItem key="refresh" startContent={<RefreshCw className="w-4 h-4" />}>
+                    Refresh Data
+                  </DropdownItem>
+                  <DropdownItem key="copy" startContent={<Copy className="w-4 h-4" />} onPress={copyAddress}>
+                    Copy Address
+                  </DropdownItem>
+                  <DropdownItem key="etherscan" startContent={<ExternalLink className="w-4 h-4" />} onPress={openEtherscan}>
+                    View on Etherscan
+                  </DropdownItem>
+                  <DropdownItem key="delete" color="danger" startContent={<Trash2 className="w-4 h-4" />} onPress={handleDelete}>
+                    Remove Wallet
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          </div>
+        </CardBody>
+      </Card>
+    );
+  }
+
+  // Grid Card View
   return (
     <Card 
       className={clsx(
-        "group cursor-pointer relative overflow-hidden",
-        "transition-all duration-75 ease-out",
-       
-        
+        "group cursor-pointer relative overflow-hidden transition-all duration-200",
+        "hover:shadow-lg hover:-translate-y-1 border-default-200 hover:border-primary/30",
+        isHighValue && "ring-1 ring-warning/20"
       )}
-      onClick={onClick}
+      isPressable
+      onPress={onClick}
     >
-      {/* Premium corner indicator */}
+      {/* Premium Corner Badge */}
       {isHighValue && (
-        <div className="absolute top-0 right-0 w-0 h-0 border-l-[24px] border-l-transparent border-t-[24px] border-t-amber-400">
-          <Sparkles className="absolute -top-3 -right-3 w-2 h-2 text-white" />
+        <div className="absolute top-0 right-0 w-0 h-0 border-l-[24px] border-l-transparent border-t-[24px] border-t-warning z-10">
+          <Crown className="absolute -top-5 -right-4 w-3 h-3 text-white" />
         </div>
       )}
 
-      <CardBody className="p-4 flex flex-col h-full">
-        {/* Header Row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1">
-            {/* Compact Avatar */}
-            <div className="relative flex-shrink-0">
-              <div className={clsx(
-                "w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm",
-                "bg-gradient-to-br shadow-md transition-transform duration-200 group-hover:scale-105",
-                getAvatarColor()
-              )}>
-                {walletInitial}
-              </div>
-              {hasActivity && (
-                <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900" />
-              )}
+      <CardBody className="p-5">
+        {/* Header */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="relative">
+            <div className="w-12 h-12 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-sm group-hover:shadow-md transition-shadow">
+              {walletInitial}
             </div>
-
-            {/* Wallet Info */}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 truncate">
-                  {wallet.name || 'Unnamed Wallet'}
-                </h3>
-                {isHighValue && (
-                  <span className="text-xs px-1.5 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded font-medium">
-                    VIP
-                  </span>
-                )}
+            
+            {hasActivity && (
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-success rounded-full border-2 border-background">
+                <div className="w-full h-full rounded-full bg-success animate-pulse" />
               </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                  {wallet.address.slice(0, 4)}...{wallet.address.slice(-3)}
-                </span>
-                <Button
-                  isIconOnly
-                  variant="light"
-                  size="sm"
-                  className="w-4 h-4 min-w-4 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    copyAddress();
-                  }}
-                >
-                  <Copy className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
+            )}
           </div>
 
-          {/* Actions */}
           <Dropdown>
             <DropdownTrigger>
               <Button
                 isIconOnly
                 variant="light"
                 size="sm"
-                className="w-6 h-6 opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                onClick={(e) => e.stopPropagation()}
+                className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8"
+               
               >
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
             </DropdownTrigger>
-            <DropdownMenu aria-label="Wallet actions">
-              <DropdownItem key="view" startContent={<Eye className="w-4 h-4" />} onPress={() => onClick?.()}>
+            <DropdownMenu>
+              <DropdownItem key="view" startContent={<Eye className="w-4 h-4" />}>
                 View Details
               </DropdownItem>
-              <DropdownItem key="edit" startContent={<Edit3 className="w-4 h-4" />} onPress={() => onEdit?.()}>
+              <DropdownItem key="edit" startContent={<Edit3 className="w-4 h-4" />} onPress={handleEdit}>
                 Edit Name
               </DropdownItem>
-              <DropdownItem key="refresh" startContent={<RefreshCw className="w-4 h-4" />} onPress={() => onRefresh?.()}>
+              <DropdownItem key="refresh" startContent={<RefreshCw className="w-4 h-4" />}>
                 Refresh Data
               </DropdownItem>
-              <DropdownItem key="copy" startContent={<Copy className="w-4 h-4" />} onPress={() => copyAddress()}>
+              <DropdownItem key="copy" startContent={<Copy className="w-4 h-4" />} onPress={copyAddress}>
                 Copy Address
               </DropdownItem>
-              <DropdownItem key="etherscan" startContent={<ExternalLink className="w-4 h-4" />} onPress={() => openInEtherscan()}>
+              <DropdownItem key="etherscan" startContent={<ExternalLink className="w-4 h-4" />} onPress={openEtherscan}>
                 View on Etherscan
               </DropdownItem>
-              <DropdownItem key="delete" color="danger" startContent={<Trash2 className="w-4 h-4" />} onPress={() => onDelete?.()}>
+              <DropdownItem key="delete" color="danger" startContent={<Trash2 className="w-4 h-4" />} onPress={handleDelete}>
                 Remove Wallet
               </DropdownItem>
             </DropdownMenu>
           </Dropdown>
         </div>
 
-        {/* Portfolio Value */}
-        <div className="flex items-end justify-between mb-3">
+        {/* Wallet Info */}
+        <div className="space-y-4">
           <div>
-            <div className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-none">
-              {formatCurrency(wallet.totalValue?.positions || 0)}
+            <div className="flex items-center gap-2 mb-2">
+              <h3 className="font-bold text-base truncate flex-1">{wallet.name || 'Unnamed Wallet'}</h3>
+              {isHighValue && (
+                <Chip size="sm" color="warning" variant="flat" className="text-xs">VIP</Chip>
+              )}
             </div>
-            <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Portfolio</div>
+            <p className="text-xs text-default-500 font-mono bg-default-100 rounded px-2 py-1 inline-block">
+              {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
+            </p>
           </div>
-          
-          {/* Performance Badge */}
-          <div className={clsx(
-            "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold",
-            isPositive 
-              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" 
-              : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"
-          )}>
-            {isPositive ? (
-              <TrendingUp className="w-3 h-3" />
-            ) : (
-              <TrendingDown className="w-3 h-3" />
-            )}
-            <span>{formatPercent(wallet.dayChangePercent)}</span>
+
+          {/* Value Section */}
+          <div className="space-y-3">
+            <div className="flex items-baseline justify-between">
+              <span className="text-2xl font-bold">
+                {formatCurrency(wallet.totalValue)}
+              </span>
+              <div className={clsx(
+                "flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold",
+                isPositive 
+                  ? 'bg-success/10 text-success border border-success/20' 
+                  : 'bg-danger/10 text-danger border border-danger/20'
+              )}>
+                {isPositive ? (
+                  <TrendingUp className="w-3 h-3" />
+                ) : (
+                  <TrendingDown className="w-3 h-3" />
+                )}
+                {formatPercent(wallet.dayChangePercent)}
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between text-sm text-default-600">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-primary rounded-full" />
+                <span>{wallet.positionsCount || 0} positions</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-secondary rounded-full" />
+                <span>{wallet.chainsCount || 0} chains</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Indicator */}
+          <div className="space-y-2">
+            <Progress
+              value={Math.min(((wallet.totalValue || 0) / 500000) * 100, 100)}
+              color="primary"
+              size="sm"
+              className="max-w-full"
+            />
+            <p className="text-xs text-default-400 text-center">Portfolio Growth</p>
+          </div>
+
+          {/* Hover Action */}
+          <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+            <div className="flex items-center justify-center gap-2 py-2 px-3 bg-primary/10 rounded-lg border border-primary/20">
+              <MousePointer2 className="w-3 h-3 text-primary" />
+              <span className="text-xs font-medium text-primary">View Analytics</span>
+              <ArrowUpRight className="w-3 h-3 text-primary" />
+            </div>
           </div>
         </div>
-
-        {/* Bottom Stats */}
-        <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mt-auto">
-          <div className="flex items-center gap-3">
-            <span>{wallet.positionsCount || 0} positions</span>
-            <span>•</span>
-            <span>{wallet.chainsCount || 0} chains</span>
-          </div>
-          
-          {hasActivity && (
-            <div className="flex items-center gap-1">
-              <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">Active</span>
-            </div>
-          )}
-        </div>
-
-        {/* Subtle progress bar
-        <div className="mt-2 h-0.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-          <div 
-            className={clsx(
-              "h-full transition-all duration-700 ease-out",
-              isPositive 
-                ? "bg-gradient-to-r from-emerald-400 to-emerald-500" 
-                : "bg-gradient-to-r from-red-400 to-red-500"
-            )}
-            style={{ 
-              width: `${Math.min(Math.max((wallet.totalValue?.positions || 0) / 50000 * 100, 5), 100)}%` 
-            }}
-          />
-        </div> */}
       </CardBody>
 
-      {/* Loading State */}
+      {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm flex items-center justify-center">
+        <div className="absolute inset-0 bg-background/90 backdrop-blur-sm flex items-center justify-center z-20">
           <div className="flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin text-slate-600 dark:text-slate-400" />
-            <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">Syncing...</span>
+            <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span className="text-xs text-primary font-medium">Syncing...</span>
           </div>
         </div>
       )}
