@@ -7,7 +7,8 @@ import {
   HugeiconsAnalyticsUp,
   HugeiconsSettings05,
   TablerHelpSquareRounded,
-  CuidaLogoutOutline
+  CuidaLogoutOutline,
+  BasilWalletOutline
 } from "@/components/icons/icons";
 import { HelpCircleIcon, ShoppingCartIcon, Wallet } from "lucide-react";
 
@@ -41,7 +42,7 @@ export const navigationItems: NavigationCategory[] = [
       {
         label: "Wallets",
         href: "/wallets",
-        icon: <Wallet className="w-5 h-5" />,
+        icon: <BasilWalletOutline className="w-5 h-5" />,
         badge: { text: "New", color: "primary" },
       },
       {

@@ -1,4 +1,4 @@
-// app/wallets/page.tsx - Clean, modern design using theme system
+// app/wallets/page.tsx - Split layout with list on left, details on right
 'use client';
 
 import { useState } from 'react';
@@ -7,10 +7,9 @@ import { Button } from '@heroui/button';
 import { Badge } from '@heroui/badge';
 import { Chip } from '@heroui/chip';
 import { Divider } from '@heroui/divider';
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
 import { useWallets } from '@/contexts/WalletContext';
 import { AddWalletModal } from '@/components/Wallets/AddWalletModal';
-import { WalletCard } from '@/components/Wallets/WalletCard';
+import  WalletAnalytics  from '@/components/Wallets/WalletAnalytics';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { title } from '@/components/primitives';
 import { 
@@ -18,32 +17,29 @@ import {
   TrendingUp, 
   TrendingDown, 
   DollarSign,
-  Activity,
   RefreshCw,
   Eye,
   EyeOff,
   Plus,
-  Users,
-  Layers,
   Crown,
-  ChevronDown,
-  Shield,
-  Zap,
-  Globe,
-  Grid3X3,
-  List,
-  Coins
+  Activity,
+  Copy,
+  ExternalLink,
+  MoreHorizontal,
+  Edit3,
+  Trash2,
+  Sparkles
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { SolarWalletOutline } from '@/components/icons/icons';
+import { FontistoDollar, MdiDollar, SolarWalletOutline } from '@/components/icons/icons';
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
+import clsx from 'clsx';
+import { WalletCard } from '@/components/Wallets/WalletCard';
 
 export default function WalletsPage() {
   const { state, actions } = useWallets();
   const [showBalance, setShowBalance] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [sortBy, setSortBy] = useState<'value' | 'change' | 'name'>('value');
-  const router = useRouter();
+  const [selectedWallet, setSelectedWallet] = useState<string | null>(null);
 
   // Calculate portfolio overview
   const portfolioOverview = {
@@ -76,292 +72,162 @@ export default function WalletsPage() {
     return `${numValue >= 0 ? '+' : ''}${numValue.toFixed(2)}%`;
   };
 
-  const sortedWallets = [...state.summaries].sort((a, b) => {
-    switch (sortBy) {
-      case 'value':
-        return (b.totalValue || 0) - (a.totalValue || 0);
-      case 'change':
-        return (b.dayChangePercent || 0) - (a.dayChangePercent || 0);
-      case 'name':
-        return (a.name || a.address).localeCompare(b.name || b.address);
-      default:
-        return 0;
-    }
-  });
-
-  const handleWalletClick = (address: string) => {
-    router.push(`/wallets/${address}`);
-  };
-
-  const getWalletTier = (value: number) => {
-    if (value >= 1000000) return { tier: 'legendary', icon: Crown };
-    if (value >= 100000) return { tier: 'epic', icon: Crown };
-    return { tier: 'common', icon: Wallet };
-  };
-
   const isPositiveTrend = totalChangePercent >= 0;
+
+  const handleWalletSelect = (address: string) => {
+    setSelectedWallet(address === selectedWallet ? null : address);
+  };
+
+  const copyAddress = (address: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    navigator.clipboard.writeText(address);
+  };
+
+  const openInEtherscan = (address: string, e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    window.open(`https://etherscan.io/address/${address}`, '_blank');
+  };
 
   return (
     <ProtectedRoute>
-      <div className="space-y-8">
-        {/* Clean Header */}
-        <div className="space-y-6">
-          <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6">
-            <div className="space-y-4">
-              <div>
-                <h1 className={title({ size: 'sm' })}>Manage Wallets</h1>
-              
-              </div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-20">
+          <div className="space-y-4">
+    
 
-              {/* Key Metrics */}
-              {state.summaries.length > 0 && (
-                <div className="flex flex-wrap items-center gap-8">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <DollarSign className="w-5 h-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-default-500 uppercase tracking-wide font-medium">Total Value</p>
-                      <p className="text-2xl font-bold">{formatCurrency(portfolioOverview.totalValue)}</p>
-                    </div>
+            {/* Key Metrics */}
+            {state.summaries.length > 0 && (
+              <div className="flex flex-wrap items-center gap-8">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500/70 to-pink-500/70 flex items-center justify-center">
+                    <FontistoDollar className="w-5 h-5 text-white" />
                   </div>
+                  <div>
+                    <p className="text-xs text-default-500 uppercase tracking-wide font-medium">Total Value</p>
+                    <p className="text-2xl font-bold">{formatCurrency(portfolioOverview.totalValue)}</p>
+                  </div>
+                </div>
 
-                  <Divider orientation="vertical" className="h-12" />
+                <Divider orientation="vertical" className="h-12" />
 
-                  <div className="flex items-center gap-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      isPositiveTrend ? 'bg-success/10' : 'bg-danger/10'
+                <div className="flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    isPositiveTrend ? 'bg-success/10' : 'bg-danger/10'
+                  }`}>
+                    {isPositiveTrend ? (
+                      <TrendingUp className="w-5 h-5 text-success" />
+                    ) : (
+                      <TrendingDown className="w-5 h-5 text-danger" />
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-xs text-default-500 uppercase tracking-wide font-medium">24h Change</p>
+                    <p className={`text-lg font-bold ${
+                      isPositiveTrend ? 'text-success' : 'text-danger'
                     }`}>
-                      {isPositiveTrend ? (
-                        <TrendingUp className="w-5 h-5 text-success" />
-                      ) : (
-                        <TrendingDown className="w-5 h-5 text-danger" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-xs text-default-500 uppercase tracking-wide font-medium">24h Change</p>
-                      <p className={`text-lg font-bold ${
-                        isPositiveTrend ? 'text-success' : 'text-danger'
-                      }`}>
-                        {formatPercent(totalChangePercent)}
-                      </p>
-                    </div>
-                  </div>
-
-                  <Divider orientation="vertical" className="h-12" />
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
-                      <SolarWalletOutline className="w-5 h-5 text-secondary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-default-500 uppercase tracking-wide font-medium">Active Wallets</p>
-                      <p className="text-lg font-bold">{portfolioOverview.totalWallets}</p>
-                    </div>
+                      {formatPercent(totalChangePercent)}
+                    </p>
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* Actions */}
-            <div className="flex items-center gap-3">
-              <Button
-                variant="flat"
-                size='sm'
-                isIconOnly
-                onPress={() => setShowBalance(!showBalance)}
-                className="border-default-200"
-              >
-                {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-              </Button>
-              
-              <Button
-                variant="flat"
-                     size='sm'
-                startContent={<RefreshCw className={`w-4 h-4 ${state.isLoading ? 'animate-spin' : ''}`} />}
-                onPress={actions.refreshAllWallets}
-                isLoading={state.isLoading}
-                className="border-default-200"
-              >
-                Refresh
-              </Button>
-              <div className="flex bg-default-100 rounded-lg ">
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'grid' ? 'shadow' : 'light'}
-                    isIconOnly
-                    onPress={() => setViewMode('grid')}
-                    className={viewMode === 'grid' ? 'bg-background shadow-sm' : ''}
-                  >
-                    <Grid3X3 className="w-3.5 h-3.5" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'list' ? 'shadow' : 'light'}
-                    isIconOnly
-                    onPress={() => setViewMode('list')}
-                    className={viewMode === 'list' ? 'bg-background shadow-sm' : ''}
-                  >
-                    <List className="w-3.5 h-3.5" />
-                  </Button>
+                <Divider orientation="vertical" className="h-12" />
+
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-secondary/10 flex items-center justify-center">
+                    <SolarWalletOutline className="w-5 h-5 text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-default-500 uppercase tracking-wide font-medium">Active Wallets</p>
+                    <p className="text-lg font-bold">{portfolioOverview.totalWallets}</p>
+                  </div>
                 </div>
-              
-              <Button
-                   size='sm'
-                variant="shadow"
-                startContent={<Plus className="w-4 h-4" />}
-                onPress={() => setIsAddModalOpen(true)}
-              >
-                Add Wallet
-              </Button>
-            </div>
+              </div>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-3">
+            <Button
+              variant="flat"
+              size="sm"
+              isIconOnly
+              onPress={() => setShowBalance(!showBalance)}
+              className="border-default-200"
+            >
+              {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+            </Button>
+            
+            <Button
+              variant="flat"
+              size="sm"
+              startContent={<RefreshCw className={`w-4 h-4 ${state.isLoading ? 'animate-spin' : ''}`} />}
+              onPress={actions.refreshAllWallets}
+              isLoading={state.isLoading}
+              className="border-default-200"
+            >
+              Refresh
+            </Button>
+            
+            <Button
+              size="sm"
+              variant="shadow"
+              startContent={<Plus className="w-4 h-4" />}
+              onPress={() => setIsAddModalOpen(true)}
+            >
+              Add Wallet
+            </Button>
           </div>
         </div>
 
-     
+        {/* Main Content - Split Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
+          {/* Left Side - Wallet List */}
+          <div className="lg:col-span-5 xl:col-span-3">
+      
+                <div className=" ">
+                  {state.summaries.length > 0 ? (
+                    <div className="space-y-2 ">
+                      {state.summaries.map((wallet) => (
 
-        {/* Controls
-        <Card>
-          <CardBody className="p-2">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-             
-                <div className="flex bg-default-100 rounded-lg p-1">
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'grid' ? 'shadow' : 'light'}
-                    isIconOnly
-                    onPress={() => setViewMode('grid')}
-                    className={viewMode === 'grid' ? 'bg-background shadow-sm' : ''}
-                  >
-                    <Grid3X3 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={viewMode === 'list' ? 'shadow' : 'light'}
-                    isIconOnly
-                    onPress={() => setViewMode('list')}
-                    className={viewMode === 'list' ? 'bg-background shadow-sm' : ''}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
+                        
+                        <WalletCard
+                          key={wallet.address}
+                          wallet={wallet}
+                          viewMode='list'
+                          isSelected={selectedWallet === wallet.address}
+                          showBalance={showBalance}
+                          onClick={() => handleWalletSelect(wallet.address)}
+                          onCopy={(e) => copyAddress(wallet.address, e)}
+                          onEtherscan={(e) => openInEtherscan(wallet.address, e)}
+                          onEdit={() => {/* TODO: Implement edit */}}
+                          onDelete={() => {
+                            if (confirm('Remove this wallet from tracking?')) {
+                              actions.removeWallet(wallet.address);
+                              if (selectedWallet === wallet.address) {
+                                setSelectedWallet(null);
+                              }
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyWalletList onAddWallet={() => setIsAddModalOpen(true)} />
+                  )}
                 </div>
-
-             
-                <Dropdown>
-                  <DropdownTrigger>
-                    <Button
-                      size="sm"
-                      variant="flat"
-                      endContent={<ChevronDown className="w-3 h-3" />}
-                    >
-                      Sort: {sortBy === 'value' ? 'Value' : sortBy === 'change' ? 'Change' : 'Name'}
-                    </Button>
-                  </DropdownTrigger>
-                  <DropdownMenu
-                    selectedKeys={[sortBy]}
-                    onSelectionChange={(keys) => setSortBy(Array.from(keys)[0] as any)}
-                  >
-                    <DropdownItem key="value" startContent={<DollarSign className="w-4 h-4" />}>
-                      By Value
-                    </DropdownItem>
-                    <DropdownItem key="change" startContent={<TrendingUp className="w-4 h-4" />}>
-                      By Change
-                    </DropdownItem>
-                    <DropdownItem key="name" startContent={<Wallet className="w-4 h-4" />}>
-                      By Name
-                    </DropdownItem>
-                  </DropdownMenu>
-                </Dropdown>
-
-              
-                {state.summaries.length > 0 && (
-                  <Badge variant="flat" color="default">
-                    {state.summaries.length} wallet{state.summaries.length !== 1 ? 's' : ''}
-                  </Badge>
-                )}
-              </div>
-
-             
-              <div className="flex items-center gap-3">
-                <Chip
-                  size="sm"
-                  variant="flat"
-                  color={state.error ? 'danger' : 'success'}
-                  startContent={
-                    state.error ? (
-                      <Activity className="w-3 h-3" />
-                    ) : (
-                      <div className="w-2 h-2 bg-success rounded-full animate-pulse" />
-                    )
-                  }
-                >
-                  {state.error ? 'Error' : 'Live'}
-                </Chip>
-                
-                {state.lastRefresh && (
-                  <p className="text-xs text-default-500">
-                    Updated {new Date(state.lastRefresh).toLocaleTimeString()}
-                  </p>
-                )}
-              </div>
-            </div>
-          </CardBody>
-        </Card> */}
-
-        {/* Wallets Display */}
-        {state.summaries.length > 0 ? (
-          <div className={viewMode === 'grid' 
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' 
-            : 'space-y-4'
-          }>
-            {sortedWallets.map((wallet) => (
-              <WalletCard 
-                key={wallet.address}
-                wallet={wallet} 
-                viewMode={viewMode} 
-                showBalance={showBalance}
-                onEdit={() => {/* TODO: Implement edit */}}
-                onDelete={() => {
-                  if (confirm('Remove this wallet from tracking?')) {
-                    actions.removeWallet(wallet.address);
-                  }
-                }}
-                onClick={() => handleWalletClick(wallet.address)}
-                tier={getWalletTier(wallet.totalValue || 0)}
-                isLoading={state.isLoading}
-              />
-            ))}
+         
           </div>
-        ) : (
-          <EmptyWalletState onAddWallet={() => setIsAddModalOpen(true)} />
-        )}
 
-        {/* Error State */}
-        {state.error && (
-          <Card className="border-danger">
-            <CardBody className="p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-danger/10 flex items-center justify-center">
-                  <Activity className="w-6 h-6 text-danger" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-danger mb-1">Sync Error</h3>
-                  <p className="text-sm text-danger/80">{state.error}</p>
-                </div>
-                <Button
-                  color="danger"
-                  variant="flat"
-                  onPress={actions.refreshAllWallets}
-                  startContent={<RefreshCw className="w-4 h-4" />}
-                  isLoading={state.isLoading}
-                >
-                  Retry
-                </Button>
-              </div>
-            </CardBody>
-          </Card>
-        )}
+          {/* Right Side - Wallet Details */}
+          <div className="lg:col-span-8 xl:col-span-9">
+            {selectedWallet ? (
+              <WalletAnalytics address={selectedWallet} />
+            ) : (
+              <WalletDetailsPlaceholder onAddWallet={() => setIsAddModalOpen(true)} />
+            )}
+          </div>
+        </div>
 
         <AddWalletModal
           isOpen={isAddModalOpen}
@@ -372,135 +238,206 @@ export default function WalletsPage() {
   );
 }
 
-// Clean Stats Card Component
-interface StatsCardProps {
-  title: string;
-  value: string;
-  change?: string;
-  trend?: 'positive' | 'negative';
-  subtitle?: string;
-  icon: React.ReactNode;
+// Wallet List Item Component
+interface WalletListItemProps {
+  wallet: any;
+  isSelected: boolean;
+  showBalance: boolean;
+  onClick: () => void;
+  onCopy: (e: React.MouseEvent) => void;
+  onEtherscan: (e: React.MouseEvent) => void;
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
-function StatsCard({ title, value, change, trend, subtitle, icon }: StatsCardProps) {
+function WalletListItem({ 
+  wallet, 
+  isSelected, 
+  showBalance, 
+  onClick, 
+  onCopy, 
+  onEtherscan, 
+  onEdit, 
+  onDelete 
+}: WalletListItemProps) {
+  const formatCurrency = (value: number | undefined | null) => {
+    if (!showBalance) return '••••••';
+    const numValue = Number(value) || 0;
+    if (numValue >= 1000000) return `$${(numValue / 1000000).toFixed(1)}M`;
+    if (numValue >= 1000) return `$${(numValue / 1000).toFixed(1)}K`;
+    return `$${numValue.toFixed(0)}`;
+  };
+
+  const formatPercent = (value: number | undefined | null) => {
+    const numValue = Number(value) || 0;
+    return `${numValue >= 0 ? '+' : ''}${numValue.toFixed(1)}%`;
+  };
+
+  const isPositive = (wallet.dayChange || 0) >= 0;
+  const isHighValue = (wallet.totalValue || 0) >= 100000;
+  const walletInitial = wallet.name?.[0]?.toUpperCase() || wallet.address[2]?.toUpperCase() || 'W';
+
   return (
-    <Card className="hover:shadow-md transition-shadow duration-200">
-      <CardBody className="p-5">
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-10 h-10 rounded-lg bg-default-100 flex items-center justify-center">
-            <div className="text-default-600">
-              {icon}
+    <div 
+      className={clsx(
+        "group cursor-pointer p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-sm",
+        isSelected 
+          ? "border-primary bg-primary/5 shadow-sm" 
+          : "border-transparent hover:border-default-200 hover:bg-default-50"
+      )}
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-3">
+        {/* Avatar */}
+        <div className="relative shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-sm">
+            {isHighValue ? <Crown className="w-5 h-5" /> : walletInitial}
+          </div>
+          {(wallet.positionsCount || 0) > 0 && (
+            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background">
+              <div className="w-full h-full rounded-full bg-success animate-pulse" />
             </div>
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <h4 className="font-medium text-sm truncate">{wallet.name || 'Unnamed Wallet'}</h4>
+            {isHighValue && (
+              <Chip size="sm" color="warning" variant="flat" className="text-xs">VIP</Chip>
+            )}
           </div>
           
-          {change && (
-            <Badge 
-              variant="flat" 
-              color={trend === 'positive' ? 'success' : 'danger'}
-              size="sm"
-            >
-              24h
-            </Badge>
-          )}
-        </div>
-        
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-default-500 uppercase tracking-wide">
-            {title}
-          </p>
-          <p className="text-2xl font-bold">
-            {value}
+          <p className="text-xs text-default-500 font-mono mb-2">
+            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
           </p>
           
-          {change && (
-            <div className={`flex items-center gap-1.5 text-sm ${
-              trend === 'positive' ? 'text-success' : 'text-danger'
-            }`}>
-              {trend === 'positive' ? (
-                <TrendingUp className="w-3.5 h-3.5" />
-              ) : (
-                <TrendingDown className="w-3.5 h-3.5" />
-              )}
-              <span className="font-medium">{change}</span>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="font-semibold text-sm">{formatCurrency(wallet.totalValue)}</p>
+              <div className={clsx(
+                "flex items-center gap-1 text-xs",
+                isPositive ? 'text-success' : 'text-danger'
+              )}>
+                {isPositive ? (
+                  <TrendingUp className="w-3 h-3" />
+                ) : (
+                  <TrendingDown className="w-3 h-3" />
+                )}
+                {formatPercent(wallet.dayChangePercent)}
+              </div>
             </div>
-          )}
-          
-          {subtitle && (
-            <p className="text-xs text-default-400">
-              {subtitle}
-            </p>
-          )}
+            
+            <div className="text-right opacity-0 group-hover:opacity-100 transition-opacity">
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button
+                    isIconOnly
+                    variant="light"
+                    size="sm"
+                    className="w-6 h-6 min-w-6"
+                    onPress={(e) => e.stopPropagation()}
+                  >
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu>
+                  <DropdownItem key="edit" startContent={<Edit3 className="w-4 h-4" />} onPress={onEdit}>
+                    Edit Name
+                  </DropdownItem>
+                  <DropdownItem key="copy" startContent={<Copy className="w-4 h-4" />} onPress={onCopy}>
+                    Copy Address
+                  </DropdownItem>
+                  <DropdownItem key="etherscan" startContent={<ExternalLink className="w-4 h-4" />} onPress={onEtherscan}>
+                    View on Etherscan
+                  </DropdownItem>
+                  <DropdownItem key="delete" color="danger" startContent={<Trash2 className="w-4 h-4" />} onPress={onDelete}>
+                    Remove Wallet
+                  </DropdownItem>
+                </DropdownMenu>
+              </Dropdown>
+            </div>
+          </div>
         </div>
-      </CardBody>
-    </Card>
-  );
-}
-
-// Clean Empty State Component
-function EmptyWalletState({ onAddWallet }: { onAddWallet: () => void }) {
-  return (
-    <Card className="border-2 border-dashed border-default-200">
-      <CardBody className="p-12 text-center">
-        <div className="w-16 h-16 mx-auto mb-6 rounded-xl bg-default-100 flex items-center justify-center">
-          <Wallet className="w-8 h-8 text-default-500" />
-        </div>
-        
-        <h3 className="text-xl font-semibold mb-3">No Wallets Connected</h3>
-        <p className="text-default-500 mb-8 max-w-md mx-auto">
-          Connect your first wallet to start tracking your DeFi portfolio across multiple networks.
-        </p>
-        
-        <Button
-          color="primary"
-          size="lg"
-          startContent={<Plus className="w-5 h-5" />}
-          onPress={onAddWallet}
-          className="mb-8"
-        >
-          Add Your First Wallet
-        </Button>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto">
-          <FeatureItem
-            icon={<Shield className="w-5 h-5" />}
-            title="Secure & Private"
-            description="Read-only access"
-          />
-          
-          <FeatureItem
-            icon={<Zap className="w-5 h-5" />}
-            title="Real-time Data"
-            description="Live portfolio tracking"
-          />
-          
-          <FeatureItem
-            icon={<Globe className="w-5 h-5" />}
-            title="Multi-chain"
-            description="All networks supported"
-          />
-        </div>
-      </CardBody>
-    </Card>
-  );
-}
-
-// Feature Item Component
-function FeatureItem({ icon, title, description }: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div className="flex flex-col items-center text-center space-y-3">
-      <div className="w-12 h-12 rounded-xl bg-default-100 flex items-center justify-center">
-        <div className="text-default-600">
-          {icon}
-        </div>
-      </div>
-      <div>
-        <p className="font-medium text-default-700">{title}</p>
-        <p className="text-sm text-default-500">{description}</p>
       </div>
     </div>
+  );
+}
+
+// Empty Wallet List Component
+function EmptyWalletList({ onAddWallet }: { onAddWallet: () => void }) {
+  return (
+    <div className="p-8 text-center">
+      <div className="w-12 h-12 mx-auto mb-4 rounded-xl bg-default-100 flex items-center justify-center">
+        <Wallet className="w-6 h-6 text-default-500" />
+      </div>
+      <h4 className="font-medium mb-2">No Wallets Added</h4>
+      <p className="text-sm text-default-500 mb-4">
+        Add your first wallet to start tracking
+      </p>
+      <Button
+        color="primary"
+        size="sm"
+        startContent={<Plus className="w-4 h-4" />}
+        onPress={onAddWallet}
+      >
+        Add Wallet
+      </Button>
+    </div>
+  );
+}
+
+// Wallet Details Placeholder Component
+function WalletDetailsPlaceholder({ onAddWallet }: { onAddWallet: () => void }) {
+  return (
+    <Card className="h-full border-2 border-dashed border-default-200">
+      <CardBody className="flex items-center justify-center p-12">
+        <div className="text-center max-w-md">
+          <div className="w-20 h-20 mx-auto mb-6 rounded-xl bg-gradient-to-br from-primary-100 to-primary-200 flex items-center justify-center">
+            <Activity className="w-10 h-10 text-primary-600" />
+          </div>
+          
+          <h3 className="text-xl font-semibold mb-3">Select a Wallet</h3>
+          <p className="text-default-500 mb-8">
+            Choose a wallet from the list to view detailed analytics, transaction history, and portfolio breakdown.
+          </p>
+          
+          <div className="space-y-4">
+            <Button
+              color="primary"
+              size="lg"
+              startContent={<Plus className="w-5 h-5" />}
+              onPress={onAddWallet}
+            >
+              Add Your First Wallet
+            </Button>
+            
+            <div className="grid grid-cols-3 gap-4 text-center">
+              <div className="space-y-2">
+                <div className="w-8 h-8 mx-auto rounded-lg bg-success/10 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-success" />
+                </div>
+                <p className="text-xs text-default-600 font-medium">Real-time Analytics</p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="w-8 h-8 mx-auto rounded-lg bg-primary/10 flex items-center justify-center">
+                  <DollarSign className="w-4 h-4 text-primary" />
+                </div>
+                <p className="text-xs text-default-600 font-medium">Portfolio Tracking</p>
+              </div>
+              
+              <div className="space-y-2">
+                <div className="w-8 h-8 mx-auto rounded-lg bg-secondary/10 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-secondary" />
+                </div>
+                <p className="text-xs text-default-600 font-medium">Multi-chain Support</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </CardBody>
+    </Card>
   );
 }

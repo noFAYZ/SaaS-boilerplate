@@ -24,36 +24,41 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html suppressHydrationWarning lang="en" className={`${lexend.className}`}>
-      <head />
-      <body
-        className={clsx(
-          "antialiased",
-        )}
-      >
-        <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
-          <NavigationProvider>
-            <WalletProvider>
-              <div className="flex h-screen overflow-hidden ">
-                {/* Sidebar - controlled by NavigationContext */}
-                <Sidebar />
-                
-                {/* Main Content */}
-                <div className="flex-1 flex flex-col w-full overflow-hidden">
+    <html suppressHydrationWarning lang="en" className={lexend.className}>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+    </head>
+    <body className={clsx("min-h-screen bg-background font-sans antialiased overflow-x-hidden")}>
+      <Providers themeProps={{ attribute: "class", defaultTheme: "dark" }}>
+        <NavigationProvider>
+          <WalletProvider>
+            {/* Main Layout Container */}
+            <div className="relative flex min-h-screen">
+              {/* Sidebar - positioned and controlled by its own logic */}
+              <Sidebar />
+              
+              {/* Main Content Wrapper */}
+              <div className="flex-1 flex flex-col min-w-0 w-full">
+                {/* Navbar - sticky positioned */}
+         
                   <Navbar />
-                  
-                  {/* Main content area with scrolling */}
-                  <main className="flex-1 overflow-y-auto">
-                    <div className="container mx-auto  py-8">
+            
+                
+                {/* Main Content Area */}
+                <main className="flex-1 w-full overflow-x-auto">
+                  {/* Content Container with responsive padding */}
+                  <div className="w-full min-h-[calc(100vh-4rem)]">
+                    <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
                       {children}
                     </div>
-                  </main>
-                </div>
+                  </div>
+                </main>
               </div>
-            </WalletProvider>
-          </NavigationProvider>
-        </Providers>
-      </body>
-    </html>
+            </div>
+          </WalletProvider>
+        </NavigationProvider>
+      </Providers>
+    </body>
+  </html>
   );
 }

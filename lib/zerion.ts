@@ -30,6 +30,7 @@ export interface WalletData {
 }
 
 export interface WalletSummary {
+  nftsCount: number;
   address: string;
   name?: string;
   totalValue: number;
@@ -139,7 +140,7 @@ export const zerionUtils = {
     }
   },
   
-  async getWalletChart(address: string, period: 'day' | 'week' | 'month' = 'week') {
+  async getWalletChart(address: string, period: 'hour' | 'day' | 'week' | 'month' |  '3months' | 'year' | 'max'= 'day') {
     const cacheKey = `chart_${address}_${period}`;
     const cached = zerionCache.get(cacheKey);
     if (cached) return cached;

@@ -98,37 +98,28 @@ export function WalletCard({
   };
 
   const isPositive = (wallet.dayChange || 0) >= 0;
-  const isHighValue = (wallet.totalValue || 0) >= 100000;
+  const isHighValue = (wallet.totalValue?.positions || 0) >= 100000;
   const hasActivity = (wallet.positionsCount || 0) > 0;
   const walletInitial = wallet.name?.[0]?.toUpperCase() || wallet.address[2]?.toUpperCase() || 'W';
 
   if (viewMode === 'list') {
     return (
       <Card 
-        className="group cursor-pointer hover:shadow-md transition-all duration-75 border-default-200 hover:border-primary/50 rounded-2xl"
+        className="group cursor-pointer hover:shadow-md transition-all duration-75 border-default  rounded-2xl w-full"
         isPressable
         onPress={onClick}
       >
-        <CardBody className="p-4">
+        <CardBody className="py-2 px-4">
           <div className="flex items-center justify-between gap-3 ">
             {/* Left Section - Avatar & Info */}
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="w-10 h-10 rounded-2xl bg-orange-500 text-primary-foreground flex items-center justify-center font-bold shadow-sm">
-                  {isHighValue ? <Crown className="w-5 h-5" /> : walletInitial}
-                </div>
-                {hasActivity && (
-                  <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background">
-                    <div className="w-full h-full rounded-full bg-success animate-pulse" />
-                  </div>
-                )}
-              </div>
+          
               
               <div className="min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <h3 className="font-semibold text-sm truncate">{wallet.name || 'Unnamed Wallet'}</h3>
                   {isHighValue && (
-                    <Badge size="sm" color="warning" variant="flat">VIP</Badge>
+                    <Chip size="sm" color="warning" variant="flat" className='rounded-lg text-[10px]'>VIP</Chip>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
@@ -148,7 +139,7 @@ export function WalletCard({
               </div>
             </div>
 
-            {/* Middle Section - Stats */}
+            {/* Middle Section - Stats 
             <div className="flex items-center gap-8">
               <div className="text-center">
                 <p className="text-[11px] text-default-500 mb-1">Positions</p>
@@ -159,14 +150,14 @@ export function WalletCard({
                 <p className="text-[11px] text-default-500 mb-1">Chains</p>
                 <p className="font-semibold text-xs">{wallet.chainsCount || 0}</p>
               </div>
-            </div>
+            </div>*/}
 
             {/* Right Section - Value & Actions */}
             <div className="flex items-center gap-4">
               <div className="text-right">
-                <p className="font-bold text-lg">{formatCurrency(wallet.totalValue?.positions)}</p>
+                <p className="font-bold text-md">{formatCurrency(wallet.totalValue?.positions)}</p>
                 <div className={clsx(
-                  "flex items-center gap-1 text-sm",
+                  "flex items-center gap-1 text-xs",
                   isPositive ? 'text-success' : 'text-danger'
                 )}>
                   {isPositive ? (
@@ -303,7 +294,7 @@ export function WalletCard({
           {/* Value Section */}
           <div className="space-y-3">
             <div className="flex items-baseline justify-between">
-              <span className="text-2xl font-bold">
+              <span className="text-xl font-bold">
                 {formatCurrency(wallet.totalValue)}
               </span>
               <div className={clsx(
@@ -336,8 +327,8 @@ export function WalletCard({
           {/* Progress Indicator */}
           <div className="space-y-2">
             <Progress
-              value={Math.min(((wallet.totalValue || 0) / 500000) * 100, 100)}
-              color="primary"
+              value={Math.min(((wallet.totalValue?.positions || 0) / 500000) * 100, 100)}
+              color="secondary"
               size="sm"
               className="max-w-full"
             />
