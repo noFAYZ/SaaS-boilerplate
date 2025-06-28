@@ -9,7 +9,7 @@ import { Chip } from '@heroui/chip';
 import { Divider } from '@heroui/divider';
 import { useWallets } from '@/contexts/WalletContext';
 import { AddWalletModal } from '@/components/Wallets/AddWalletModal';
-import  WalletAnalytics  from '@/components/Wallets/WalletAnalytics';
+import { WalletAnalytics } from '@/components/WalletAnalytics';
 import ProtectedRoute from '@/components/Auth/ProtectedRoute';
 import { title } from '@/components/primitives';
 import { 
@@ -21,17 +21,10 @@ import {
   Eye,
   EyeOff,
   Plus,
-  Crown,
   Activity,
-  Copy,
-  ExternalLink,
-  MoreHorizontal,
-  Edit3,
-  Trash2,
   Sparkles
 } from 'lucide-react';
-import { FontistoDollar, MdiDollar, SolarWalletOutline } from '@/components/icons/icons';
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
+import { FontistoDollar, SolarWalletOutline } from '@/components/icons/icons';
 import clsx from 'clsx';
 import { WalletCard } from '@/components/Wallets/WalletCard';
 
@@ -88,14 +81,22 @@ export default function WalletsPage() {
     window.open(`https://etherscan.io/address/${address}`, '_blank');
   };
 
+  const getWalletTier = (value: number) => {
+    if (value >= 1000000) return { tier: 'legendary', icon: Activity };
+    if (value >= 100000) return { tier: 'epic', icon: Activity };
+    return { tier: 'common', icon: Wallet };
+  };
+
+  const handleShowBalanceChange = (show: boolean) => {
+    setShowBalance(show);
+  };
+
   return (
     <ProtectedRoute>
       <div className="space-y-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-20">
           <div className="space-y-4">
-    
-
             {/* Key Metrics */}
             {state.summaries.length > 0 && (
               <div className="flex flex-wrap items-center gap-8">
@@ -184,45 +185,44 @@ export default function WalletsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
           {/* Left Side - Wallet List */}
           <div className="lg:col-span-5 xl:col-span-3">
-      
-                <div className=" ">
-                  {state.summaries.length > 0 ? (
-                    <div className="space-y-2 ">
-                      {state.summaries.map((wallet) => (
-
-                        
-                        <WalletCard
-                          key={wallet.address}
-                          wallet={wallet}
-                          viewMode='list'
-                          isSelected={selectedWallet === wallet.address}
-                          showBalance={showBalance}
-                          onClick={() => handleWalletSelect(wallet.address)}
-                          onCopy={(e) => copyAddress(wallet.address, e)}
-                          onEtherscan={(e) => openInEtherscan(wallet.address, e)}
-                          onEdit={() => {/* TODO: Implement edit */}}
-                          onDelete={() => {
-                            if (confirm('Remove this wallet from tracking?')) {
-                              actions.removeWallet(wallet.address);
-                              if (selectedWallet === wallet.address) {
-                                setSelectedWallet(null);
-                              }
-                            }
-                          }}
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                    <EmptyWalletList onAddWallet={() => setIsAddModalOpen(true)} />
-                  )}
+            <div className="">
+              {state.summaries.length > 0 ? (
+                <div className="space-y-2">
+                  {state.summaries.map((wallet) => (
+                    <WalletCard
+                      key={wallet.address}
+                      wallet={wallet}
+                      viewMode='list'
+                      showBalance={showBalance}
+                      onClick={() => handleWalletSelect(wallet.address)}
+                      onEdit={() => {/* TODO: Implement edit */}}
+                      onDelete={() => {
+                        if (confirm('Remove this wallet from tracking?')) {
+                          actions.removeWallet(wallet.address);
+                          if (selectedWallet === wallet.address) {
+                            setSelectedWallet(null);
+                          }
+                        }
+                      }}
+                      tier={getWalletTier(wallet.totalValue || 0)}
+                      isLoading={state.isLoading}
+                    />
+                  ))}
                 </div>
-         
+              ) : (
+                <EmptyWalletList onAddWallet={() => setIsAddModalOpen(true)} />
+              )}
+            </div>
           </div>
 
           {/* Right Side - Wallet Details */}
           <div className="lg:col-span-8 xl:col-span-9">
             {selectedWallet ? (
-              <WalletAnalytics address={selectedWallet} />
+              <WalletAnalytics 
+                address={selectedWallet}
+                showBalance={showBalance}
+                onShowBalanceChange={handleShowBalanceChange}
+              />
             ) : (
               <WalletDetailsPlaceholder onAddWallet={() => setIsAddModalOpen(true)} />
             )}
@@ -235,133 +235,6 @@ export default function WalletsPage() {
         />
       </div>
     </ProtectedRoute>
-  );
-}
-
-// Wallet List Item Component
-interface WalletListItemProps {
-  wallet: any;
-  isSelected: boolean;
-  showBalance: boolean;
-  onClick: () => void;
-  onCopy: (e: React.MouseEvent) => void;
-  onEtherscan: (e: React.MouseEvent) => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}
-
-function WalletListItem({ 
-  wallet, 
-  isSelected, 
-  showBalance, 
-  onClick, 
-  onCopy, 
-  onEtherscan, 
-  onEdit, 
-  onDelete 
-}: WalletListItemProps) {
-  const formatCurrency = (value: number | undefined | null) => {
-    if (!showBalance) return '••••••';
-    const numValue = Number(value) || 0;
-    if (numValue >= 1000000) return `$${(numValue / 1000000).toFixed(1)}M`;
-    if (numValue >= 1000) return `$${(numValue / 1000).toFixed(1)}K`;
-    return `$${numValue.toFixed(0)}`;
-  };
-
-  const formatPercent = (value: number | undefined | null) => {
-    const numValue = Number(value) || 0;
-    return `${numValue >= 0 ? '+' : ''}${numValue.toFixed(1)}%`;
-  };
-
-  const isPositive = (wallet.dayChange || 0) >= 0;
-  const isHighValue = (wallet.totalValue || 0) >= 100000;
-  const walletInitial = wallet.name?.[0]?.toUpperCase() || wallet.address[2]?.toUpperCase() || 'W';
-
-  return (
-    <div 
-      className={clsx(
-        "group cursor-pointer p-3 rounded-lg border-2 transition-all duration-200 hover:shadow-sm",
-        isSelected 
-          ? "border-primary bg-primary/5 shadow-sm" 
-          : "border-transparent hover:border-default-200 hover:bg-default-50"
-      )}
-      onClick={onClick}
-    >
-      <div className="flex items-center gap-3">
-        {/* Avatar */}
-        <div className="relative shrink-0">
-          <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-sm">
-            {isHighValue ? <Crown className="w-5 h-5" /> : walletInitial}
-          </div>
-          {(wallet.positionsCount || 0) > 0 && (
-            <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-success rounded-full border-2 border-background">
-              <div className="w-full h-full rounded-full bg-success animate-pulse" />
-            </div>
-          )}
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
-            <h4 className="font-medium text-sm truncate">{wallet.name || 'Unnamed Wallet'}</h4>
-            {isHighValue && (
-              <Chip size="sm" color="warning" variant="flat" className="text-xs">VIP</Chip>
-            )}
-          </div>
-          
-          <p className="text-xs text-default-500 font-mono mb-2">
-            {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
-          </p>
-          
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="font-semibold text-sm">{formatCurrency(wallet.totalValue)}</p>
-              <div className={clsx(
-                "flex items-center gap-1 text-xs",
-                isPositive ? 'text-success' : 'text-danger'
-              )}>
-                {isPositive ? (
-                  <TrendingUp className="w-3 h-3" />
-                ) : (
-                  <TrendingDown className="w-3 h-3" />
-                )}
-                {formatPercent(wallet.dayChangePercent)}
-              </div>
-            </div>
-            
-            <div className="text-right opacity-0 group-hover:opacity-100 transition-opacity">
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
-                    isIconOnly
-                    variant="light"
-                    size="sm"
-                    className="w-6 h-6 min-w-6"
-                    onPress={(e) => e.stopPropagation()}
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu>
-                  <DropdownItem key="edit" startContent={<Edit3 className="w-4 h-4" />} onPress={onEdit}>
-                    Edit Name
-                  </DropdownItem>
-                  <DropdownItem key="copy" startContent={<Copy className="w-4 h-4" />} onPress={onCopy}>
-                    Copy Address
-                  </DropdownItem>
-                  <DropdownItem key="etherscan" startContent={<ExternalLink className="w-4 h-4" />} onPress={onEtherscan}>
-                    View on Etherscan
-                  </DropdownItem>
-                  <DropdownItem key="delete" color="danger" startContent={<Trash2 className="w-4 h-4" />} onPress={onDelete}>
-                    Remove Wallet
-                  </DropdownItem>
-                </DropdownMenu>
-              </Dropdown>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }
 
