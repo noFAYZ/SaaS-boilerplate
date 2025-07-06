@@ -16,7 +16,7 @@ import NextLink from "next/link";
 import clsx from "clsx";
 
 import { ThemeSwitch } from "@/components/theme-switch";
-import { SearchIcon, Logo } from "@/components/icons";
+import { SearchIcon, Logo, LogoMappr } from "@/components/icons";
 import { AuthButtons } from "@/components/Auth/AuthButtons";
 import { 
   Bell, 
@@ -201,9 +201,9 @@ export const Navbar = () => {
     <Input
       ref={variant === "full" ? searchInputRef : undefined}
       aria-label="Search"
-      className={clsx("transition-all duration-200", className)}
+      className={clsx("transition-all duration-75", className)}
       classNames={{
-        inputWrapper: "bg-default-100/70 hover:bg-default-100 backdrop-blur-md border-0",
+        inputWrapper: "bg-default-200/70 hover:bg-default-100 backdrop-blur-md border-0",
         input: "text-sm placeholder:text-default-500",
       }}
       placeholder={placeholder}
@@ -228,9 +228,12 @@ export const Navbar = () => {
       <HeroUINavbar 
         maxWidth="full"
         className={clsx(
-          "bg-background/80 backdrop-blur-md transition-all duration-75 border-b border-divider",
-          isScrolled && "shadow-sm bg-background/90"
+          " backdrop-blur-md transition-all duration-75 border-b border-divider",
+          isScrolled && "shadow-sm "
         )}
+        classNames={{
+          wrapper: "max-w-7xl",
+        }}
         height="4rem"
       >
         {/* Left Content */}
@@ -245,9 +248,9 @@ export const Navbar = () => {
           {/* Logo (show when sidebar is hidden or in navbar mode) */}
           {(!isSidebarVisible || navigationMode === 'navbar') && (
             <NavbarItem className="flex-shrink-0">
-              <NextLink href="/" className="flex items-center gap-3 group">
+              <NextLink href="/" className="flex items-center gap-2 group">
                 <div className="relative">
-                  <Logo size={28} className="text-primary transition-transform group-hover:scale-105" />
+                  <LogoMappr className="h-8 w-8" />
                   <div className="absolute inset-0 bg-primary-500/20 blur-md rounded-full opacity-0 group-hover:opacity-60 transition-opacity"></div>
                 </div>
                 <span className="font-bold text-lg tracking-tight hidden sm:inline-block">

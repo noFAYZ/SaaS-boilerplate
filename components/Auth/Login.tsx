@@ -13,7 +13,7 @@ export default function Login() {
     const { theme, setTheme } = useTheme();
 
   return (
-    <div className="w-full max-w-md p-4 mx-auto bg-background border border-default-200 rounded-lg shadow-md">
+    <div className="w-full max-w-md p-4 mx-auto bg-primary-500/5 border border-divider rounded-2xl z-10 ">
       <h2 className="mb-6 text-xl font-bold text-center">Sign In</h2>
       <Auth
         supabaseClient={supabase}

@@ -10,7 +10,7 @@ import {
   ChevronRightIcon,
 } from "lucide-react";
 
-import { Logo } from "@/components/icons";
+import { Logo, LogoMappr } from "@/components/icons";
 import { 
   CuidaLogoutOutline, 
   HugeiconsSettings05, 
@@ -30,7 +30,7 @@ const MOBILE_BREAKPOINT = 768;
 const TABLET_BREAKPOINT = 1024;
 
 export const Sidebar = ({ className }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [isMobile, setIsMobile] = useState(false);
   const [open, setOpen] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
@@ -249,7 +249,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
               aria-label="Go to homepage"
             >
               <div className="relative glow-primary">
-                <Logo size={32} className="text-primary-500 transition-transform group-hover:scale-105" />
+                <LogoMappr   />
               </div>
               <span className="font-bold text-lg tracking-tight">MoneyMappr</span>
             </NextLink>
@@ -263,7 +263,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
               aria-label="Go to homepage"
             >
               <div className="relative glow-primary">
-                <Logo size={32} className="text-primary-500 transition-transform group-hover:scale-105" />
+                <LogoMappr   />
               </div>
             </NextLink>
           )}

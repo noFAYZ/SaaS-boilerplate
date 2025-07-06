@@ -1,23 +1,47 @@
 // components/WalletAnalytics/WalletHeader.tsx
 'use client';
 
-import React from 'react';
-import { Card, CardBody } from '@heroui/card';
-import { Button } from '@heroui/button';
-import { Badge } from '@heroui/badge';
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Wallet, 
-  Copy, 
+  Card, 
+  CardBody,
+  Chip,
+  Tooltip,
+  Avatar,
+  Badge,
+  Button,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem
+} from '@heroui/react';
+import { 
+  ArrowUpRight, 
+  ArrowDownRight, 
   ExternalLink, 
-  ChevronDown, 
-  Eye, 
-  EyeOff, 
+  Clock, 
+  Layers,
+  Copy,
+  Wallet,
   RefreshCw,
-  Layers
+  Eye,
+  EyeOff,
+  ChevronDown,
+  Network,
+  Sparkles,
+  Zap,
+  CheckCircle2,
+  TrendingUp,
+  TrendingDown,
+  Activity,
+  Globe,
+  MoreVertical,
+  CopyCheck
 } from 'lucide-react';
-import { SUPPORTED_CHAINS } from '@/lib/wallet-analytics/constants';
-import { copyToClipboard, openEtherscan, truncateAddress } from '@/lib/wallet-analytics/utils';
+import { zerionUtils, zerionSDK, WalletSummary } from '@/lib/zerion';
+import WalletPortfolioChart from '../Wallets/WalletPortfolioChart';
+import GooeyLoader from '../shared/loader';
+import { FluentCopy20Filled, FluentCopy20Regular, MynauiCopy, MynauiCopySolid } from '../icons/icons';
 
 interface WalletHeaderProps {
   address: string;
@@ -26,8 +50,34 @@ interface WalletHeaderProps {
   showBalance: boolean;
   onToggleBalance: () => void;
   onRefresh: () => void;
-  refreshing: boolean;
+  refreshing?: boolean;
   availableChains: string[];
+  walletName?: string;
+  variant?: 'default' | 'compact' | 'detailed';
+}
+
+interface ZerionChain {
+  type: "chains";
+  id: string;
+  attributes: {
+    external_id: string;
+    name: string;
+    icon: { url: string; };
+    explorer: {
+      name: string;
+      token_url_format: string;
+      tx_url_format: string;
+      home_url: string;
+    };
+    rpc: { public_servers_url: string[]; };
+    flags: {
+      supports_trading: boolean;
+      supports_sending: boolean;
+      supports_bridge: boolean;
+    };
+  };
+  relationships: any;
+  links: { self: string; };
 }
 
 export const WalletHeader: React.FC<WalletHeaderProps> = ({
@@ -37,65 +87,368 @@ export const WalletHeader: React.FC<WalletHeaderProps> = ({
   showBalance,
   onToggleBalance,
   onRefresh,
-  refreshing,
-  availableChains
+  refreshing = false,
+  availableChains,
+  walletName = "My Wallet",
+  variant = 'default'
 }) => {
-  const handleCopyAddress = () => {
-    copyToClipboard(address);
+  const [walletData, setWalletData] = useState<WalletSummary | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [showRefreshAnimation, setShowRefreshAnimation] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [supportedChains, setSupportedChains] = useState<ZerionChain[]>([]);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+
+  // Responsive breakpoint detection
+  useEffect(() => {
+    const updateBreakpoints = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+    
+    updateBreakpoints();
+    window.addEventListener('resize', updateBreakpoints);
+    return () => window.removeEventListener('resize', updateBreakpoints);
+  }, []);
+
+  // Update time every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Load wallet data and supported chains
+  useEffect(() => {
+    const loadWalletData = async () => {
+      if (!address) return;
+      
+      setIsLoading(true);
+      try {
+        const [summary, chains] = await Promise.all([
+          zerionUtils.getWalletSummary(address),
+          zerionSDK.chains.getAllChains()
+        ]);
+        setWalletData(summary);
+        setSupportedChains(chains.data || []);
+      } catch (error) {
+        console.error('Error loading wallet data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadWalletData();
+  }, [address]);
+
+  // Enhanced formatters
+  const formatCurrency = (value = 0) => {
+    if (!showBalance) return '••••••';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+      notation: value >= 1000000 ? 'compact' : 'standard'
+    }).format(value);
+  };
+  
+  const formatDetailedCurrency = (value = 0) => {
+    if (!showBalance) return '••••••';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+  
+  const formatPercentage = (value = 0) => {
+    if (!showBalance) return '••%';
+    const sign = value >= 0 ? '+' : '';
+    return `${sign}${Number(value).toFixed(2)}%`;
+  };
+  
+  const formatAddress = (address: string) => {
+    if (isMobile) {
+      return `${address.substring(0, 4)}...${address.substring(address.length - 4)}`;
+    }
+    return `${address.substring(0, 6)}...${address.substring(address.length - 6)}`;
   };
 
-  const handleOpenEtherscan = () => {
-    openEtherscan(address, 'address');
+  // Enhanced handlers
+  const handleRefresh = () => {
+    setShowRefreshAnimation(true);
+    onRefresh();
+    setTimeout(() => {
+      setShowRefreshAnimation(false);
+    }, 1200);
   };
+
+  const copyAddress = async () => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setCopySuccess(true);
+      setTimeout(() => setCopySuccess(false), 2500);
+    } catch (error) {
+      console.error('Failed to copy address:', error);
+    }
+  };
+
+  // Calculate portfolio metrics
+  const portfolioMetrics = useMemo(() => {
+    if (!walletData) return null;
+    
+    const isPositiveChange = walletData.dayChangePercent >= 0;
+    const risk = walletData.totalValue > 100000 ? 'high' : walletData.totalValue > 10000 ? 'medium' : 'low';
+    const diversification = (walletData.chainsCount || 0) > 3 ? 'high' : (walletData.chainsCount || 0) > 1 ? 'medium' : 'low';
+    
+    return {
+      isPositiveChange,
+      risk,
+      diversification,
+      activity: walletData.positionsCount > 20 ? 'high' : walletData.positionsCount > 5 ? 'medium' : 'low'
+    };
+  }, [walletData]);
+
+  // Helper function to get chain display info
+  const getChainInfo = (chainId: string) => {
+    const chain = supportedChains.find(c => c.id === chainId);
+    return {
+      id: chainId,
+      name: chain?.attributes?.name || chainId,
+      icon: chain?.attributes?.icon?.url || '🔗'
+    };
+  };
+
+  // Loading state with modern glass effect
+  if (isLoading) {
+    return (
+      <div className="relative w-full overflow-hidden rounded-2xl lg:rounded-3xl  bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent backdrop-blur-xl animate-in fade-in-0 duration-100 slide-in-from-bottom-4">
+        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 via-transparent to-pink-500/5" />
+        <div className="relative flex flex-col items-center justify-center h-64 lg:h-80 gap-6">
+          <div className="animate-in fade-in-0 zoom-in-95 duration-300 delay-150">
+            <GooeyLoader />
+          </div>
+          <p className="text-sm text-white/60 font-medium animate-in fade-in-0 slide-in-from-bottom-2 duration-500 delay-300">
+            Loading portfolio data...
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Card>
-      <CardBody className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-white" />
-            </div>
-            
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-xl font-semibold">Wallet Analytics</h1>
-                <Badge color="success" variant="flat" className="text-xs">
-                  Live
-                </Badge>
+    <div className="relative w-full  rounded-2xl lg:rounded-3xl border border-divider bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent backdrop-blur-xl animate-in fade-in-0 duration-100 slide-in-from-bottom-6">
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 rounded-2xl lg:rounded-3xl  bg-gradient-to-br from-orange-500/5 via-transparent to-pink-500/5" />
+      
+      {/* Main content */}
+      <div className="relative">
+        <div className="flex flex-col  min-h-0">
+          {/* Left Panel - Wallet Info */}
+          <div className=" p-4  flex justify-between ">
+            {/* Header Section */}
+            <div className="flex items-start justify-between  animate-in fade-in-0 slide-in-from-left-4 duration-100 ">
+              <div className="flex items-center gap-4 flex-1 min-w-0">
+                {/* Avatar with modern styling */}
+                <div className="relative group">
+                 
+                    <Badge 
+                      size="sm"
+                      variant="solid"
+                      content={<Eye size={12} className="text-white" />} 
+                      placement="bottom-right"
+                      className="bg-gradient-to-r from-orange-500 to-pink-500 border-2 border-white/20" 
+                    >
+                      <Avatar
+                        name={walletName}
+                        size={isMobile ? "sm" : "md"}
+                        className="rounded-2xl bg-gradient-to-br from-orange-500 via-pink-500 to-purple-600 text-white font-bold "
+                      />
+                    </Badge>
+                
+                </div>
+                
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h2 className="text-sm sm:text-base font-bold  truncate">{walletName}</h2>
+                    
+                    {/* Status indicators - hidden on mobile */}
+                    {!isMobile && (
+                      <div className="flex items-center gap-2 animate-in fade-in-0">
+                        <Chip
+                          size="sm"
+                          variant="flat"
+                          color={portfolioMetrics?.diversification === 'high' ? 'success' : 
+                                portfolioMetrics?.diversification === 'medium' ? 'warning' : 'danger'}
+                          startContent={<Network size={10} />}
+                          className="text-[10px] h-4.5 px-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-md"
+                        >
+                          {portfolioMetrics?.diversification}
+                        </Chip>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Address Section with enhanced styling */}
+                  <div className="flex items-center gap-2 ">
+                    <Tooltip 
+                      content={copySuccess ? "Copied!" : "Copy Address"} 
+                      className="text-[10px] font-medium rounded-lg"
+                    >
+                      <div 
+                        className="group flex items-center cursor-pointer bg-default dark:bg-white/5 rounded-lg px-2 py-0.5 dark:hover:bg-white/10 backdrop-blur-sm border border-white/10 "
+                        onClick={copyAddress}
+                      >
+                        <code className="text-xs font-mono mr-2  font-medium">
+                          {formatAddress(address)}
+                        </code>
+                        <div className={` ${copySuccess ? 'rotate-360' : ''}`}>
+                          {copySuccess ? (
+                            <FluentCopy20Filled className="w-3.5 h-3.5 " />
+                          ) : (
+                            <FluentCopy20Regular  className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                      </div>
+                    </Tooltip>
+                    
+                    <Tooltip content="View on Explorer" className="text-[10px] font-medium rounded-lg">
+                      <Button
+                        as="a"
+                        href={`https://etherscan.io/address/${address}`}
+                        target="_blank"
+                        isIconOnly
+                        size="sm"
+                        variant="flat"
+                        className="min-w-0 w-6 h-6 bg-default dark:bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-sm"
+                      >
+                        <ExternalLink size={12} className="" />
+                      </Button>
+                    </Tooltip>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <p className="text-xs text-default-500 font-mono bg-default-100 rounded px-2 py-1">
-                  {truncateAddress(address, 10, 8)}
-                </p>
-                <Button size="sm" variant="light" isIconOnly onPress={handleCopyAddress}>
-                  <Copy className="w-3 h-3" />
-                </Button>
-                <Button size="sm" variant="light" isIconOnly onPress={handleOpenEtherscan}>
-                  <ExternalLink className="w-3 h-3" />
-                </Button>
-              </div>
+
+              {/* Mobile/Tablet Controls 
+              {(isMobile || isTablet) && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    size="sm" 
+                    variant="flat" 
+                    isIconOnly 
+                    onPress={onToggleBalance}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                  >
+                    {showBalance ? <Eye className="w-4 h-4 text-white/60" /> : <EyeOff className="w-4 h-4 text-white/60" />}
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="flat"
+                    isIconOnly
+                    onPress={handleRefresh}
+                    isLoading={refreshing}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                  >
+                    <RefreshCw className={`w-4 h-4 text-white/60 transition-transform duration-300 ${showRefreshAnimation ? 'animate-spin' : ''}`} />
+                  </Button>
+
+                  <Dropdown>
+                    <DropdownTrigger>
+                      <Button 
+                        size="sm" 
+                        variant="flat" 
+                        isIconOnly
+                        className="bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-sm transition-all duration-200 hover:scale-105"
+                      >
+                        <MoreVertical className="w-4 h-4 text-white/60" />
+                      </Button>
+                    </DropdownTrigger>
+                    <DropdownMenu className="bg-black/80 backdrop-blur-xl border border-white/10">
+                      <DropdownItem startContent={<RefreshCw size={14} />}>
+                        Refresh Data
+                      </DropdownItem>
+                      <DropdownItem startContent={<ExternalLink size={14} />}>
+                        Export Data
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
+                </div>
+              )}*/}
             </div>
+
+
+            {/* Quick Stats Grid */}
+            <div className="grid grid-cols-3 gap-2 ">
+              {[
+                { icon: Wallet, label: 'Positions', value: walletData?.positionsCount || 0, color: 'from-blue-400 to-cyan-400', delay: '400ms' },
+                { icon: Sparkles, label: 'NFTs', value: walletData?.nftsCount || 0, color: 'from-purple-400 to-pink-400', delay: '500ms' },
+                { icon: Network, label: 'Chains', value: walletData?.chainsCount || 0, color: 'from-green-400 to-emerald-400', delay: '600ms' }
+              ].map((stat, index) => (
+                <div
+                  key={stat.label}
+                  className="flex  gap-1 bg-white/5 backdrop-blur-sm rounded-xl p-2 border border-white/10 text-center justify-center group hover:bg-white/10 cursor-pointer animate-in fade-in-0 "
+                  style={{ animationDelay: stat.delay }}
+                >
+             
+                  <p className="font-bold text-base ">{stat.value}</p>
+                  <p className="text-[10px] text-foreground/50 uppercase  font-medium">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+
+           
           </div>
 
-          <div className="flex items-center gap-2">
+     
+            <WalletPortfolioChart 
+              walletAddress={address}
+              initialPeriod="week"
+              showBalance={showBalance}
+              showControls={true}
+              compact={false}
+              variant='minimal'
+              height={isMobile ? 200 : isTablet ? 220 : 280}
+              className="h-full"
+            />
+          </div>
+       
+
+        {/* Mobile Chain Selector
+        {(isMobile || isTablet) && (
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 border-t border-white/10 animate-in fade-in-0 slide-in-from-bottom-4 duration-500 delay-500">
             <Dropdown>
               <DropdownTrigger>
                 <Button 
                   variant="flat" 
                   size="sm"
                   endContent={<ChevronDown className="w-4 h-4" />}
+                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 backdrop-blur-sm text-white/80 transition-all duration-200 hover:scale-105"
                 >
                   <div className="flex items-center gap-2">
                     {selectedChain === 'all' ? (
                       <>
-                        <Layers className="w-4 h-4" />
-                        <span>All Chains</span>
+                        <Globe className="w-4 h-4" />
+                        <span>All Networks</span>
                       </>
                     ) : (
                       <>
-                        <span>{SUPPORTED_CHAINS.find(c => c.id === selectedChain)?.icon}</span>
-                        <span>{SUPPORTED_CHAINS.find(c => c.id === selectedChain)?.name}</span>
+                        <img 
+                          src={getChainInfo(selectedChain).icon} 
+                          alt={getChainInfo(selectedChain).name}
+                          className="w-4 h-4 rounded-full"
+                          onError={(e) => { 
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling!.style.display = 'inline';
+                          }}
+                        />
+                        <span style={{ display: 'none' }}>🔗</span>
+                        <span>{getChainInfo(selectedChain).name}</span>
                       </>
                     )}
                   </div>
@@ -104,43 +457,39 @@ export const WalletHeader: React.FC<WalletHeaderProps> = ({
               <DropdownMenu
                 selectedKeys={[selectedChain]}
                 onSelectionChange={(keys) => onChainChange(Array.from(keys)[0] as string)}
+                className="bg-black/80 backdrop-blur-xl border border-white/10"
               >
                 <DropdownItem key="all">
                   <div className="flex items-center gap-2">
-                    <Layers className="w-4 h-4" />
-                    <span>All Chains</span>
+                    <Globe className="w-4 h-4" />
+                    <span>All Networks</span>
                   </div>
                 </DropdownItem>
                 {availableChains.map((chainId) => {
-                  const chain = SUPPORTED_CHAINS.find(c => c.id === chainId);
+                  const chainInfo = getChainInfo(chainId);
                   return (
                     <DropdownItem key={chainId}>
                       <div className="flex items-center gap-2">
-                        <span>{chain?.icon || '🔗'}</span>
-                        <span>{chain?.name || chainId}</span>
+                        <img 
+                          src={chainInfo.icon} 
+                          alt={chainInfo.name}
+                          className="w-4 h-4 rounded-full"
+                          onError={(e) => { 
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling!.style.display = 'inline';
+                          }}
+                        />
+                        <span style={{ display: 'none' }}>🔗</span>
+                        <span>{chainInfo.name}</span>
                       </div>
                     </DropdownItem>
                   );
                 })}
               </DropdownMenu>
             </Dropdown>
-
-            <Button size="sm" variant="light" isIconOnly onPress={onToggleBalance}>
-              {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-            </Button>
-            
-            <Button 
-              size="sm" 
-              variant="flat" 
-              isIconOnly 
-              onPress={onRefresh} 
-              isLoading={refreshing}
-            >
-              <RefreshCw className="w-4 h-4" />
-            </Button>
           </div>
-        </div>
-      </CardBody>
-    </Card>
+        )} */}
+      </div>
+    </div>
   );
 };

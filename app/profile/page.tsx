@@ -12,7 +12,7 @@ export default function ProfilePage() {
           <h1 className={title()}>Profile</h1>
           <p className="mt-4 text-default-500">Your account information</p>
         </div>
-        <UserProfile children={undefined} />
+        <UserProfile children={undefined}  />
       </div>
     </ProtectedRoute>
   );

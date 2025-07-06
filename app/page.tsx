@@ -7,7 +7,7 @@ import { Divider } from "@heroui/divider";
 
 import { siteConfig } from "@/config/site";
 import { title, subtitle, card } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
+import { GithubIcon, LogoMappr } from "@/components/icons";
 
 export default function Home() {
   return (
@@ -15,7 +15,7 @@ export default function Home() {
       <div className="inline-block max-w-xl text-center justify-center">
         <div className="mb-2">
           <span className="inline-block px-3 py-1 mb-4 text-xs font-medium rounded-full bg-primary-500/10 text-primary-500">
-            Welcome to ACME Finance
+            Welcome to ACME Finance 
           </span>
         </div>
         <span className={title({ color: "foreground", size: 'lg' })}>Modern&nbsp;</span>

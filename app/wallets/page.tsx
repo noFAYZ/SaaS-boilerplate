@@ -93,7 +93,7 @@ export default function WalletsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="space-y-6">
+      <div className="   space-y-6">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-20">
           <div className="space-y-4">
@@ -184,7 +184,7 @@ export default function WalletsPage() {
         {/* Main Content - Split Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-[600px]">
           {/* Left Side - Wallet List */}
-          <div className="lg:col-span-5 xl:col-span-3">
+          <div className="lg:col-span-4 xl:col-span-4">
             <div className="">
               {state.summaries.length > 0 ? (
                 <div className="space-y-2">
@@ -193,6 +193,7 @@ export default function WalletsPage() {
                       key={wallet.address}
                       wallet={wallet}
                       viewMode='list'
+                      showDetailedStats={false}
                       showBalance={showBalance}
                       onClick={() => handleWalletSelect(wallet.address)}
                       onEdit={() => {/* TODO: Implement edit */}}
@@ -204,7 +205,7 @@ export default function WalletsPage() {
                           }
                         }
                       }}
-                      tier={getWalletTier(wallet.totalValue || 0)}
+                      tier={getWalletTier(wallet.totalValue?.positions || 0)}
                       isLoading={state.isLoading}
                     />
                   ))}
@@ -216,7 +217,7 @@ export default function WalletsPage() {
           </div>
 
           {/* Right Side - Wallet Details */}
-          <div className="lg:col-span-8 xl:col-span-9">
+          <div className="lg:col-span-8 xl:col-span-8">
             {selectedWallet ? (
               <WalletAnalytics 
                 address={selectedWallet}

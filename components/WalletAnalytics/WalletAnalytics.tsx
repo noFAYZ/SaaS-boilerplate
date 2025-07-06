@@ -7,6 +7,8 @@ import { Spinner } from '@heroui/spinner';
 import { Button } from '@heroui/button';
 import { Chip } from '@heroui/chip';
 import { Tabs, Tab } from '@heroui/tabs';
+import { Badge } from '@heroui/badge';
+import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from '@heroui/dropdown';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   AlertCircle, 
@@ -15,7 +17,24 @@ import {
   Coins, 
   Image, 
   Activity,
-  Clock
+  Clock,
+  Wallet,
+  Copy,
+  ExternalLink,
+  ChevronDown,
+  Eye,
+  EyeOff,
+  Layers,
+  DollarSign,
+  Globe,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
+  Crown,
+  Zap,
+  Settings,
+  MoreHorizontal
 } from 'lucide-react';
 import { zerionSDK } from '@/lib/zerion';
 import { WalletHeader } from './WalletHeader';
@@ -25,7 +44,7 @@ import { ChainDistribution } from './ChainDistribution';
 import { TokensList } from './TokensList';
 import { NFTsList } from './NFTsList';
 import { TransactionsList } from './TransactionsList';
-import { getUniqueChains, isValidAddress } from '@/lib/wallet-analytics/utils';
+import { getUniqueChains, isValidAddress, truncateAddress, copyToClipboard, openEtherscan } from '@/lib/wallet-analytics/utils';
 import { SUPPORTED_CHAINS } from '@/lib/wallet-analytics/constants';
 import type { 
   WalletAnalyticsProps, 
@@ -33,6 +52,293 @@ import type {
   Period, 
   TabKey 
 } from '@/lib/wallet-analytics/types';
+import GooeyLoader from '../shared/loader';
+
+// Top Controls Bar
+const TopControlsBar: React.FC<{
+  selectedChain: string;
+  onChainChange: (chain: string) => void;
+  showBalance: boolean;
+  onToggleBalance: () => void;
+  onRefresh: () => void;
+  refreshing: boolean;
+  availableChains: string[];
+}> = ({ 
+  selectedChain, 
+  onChainChange, 
+  showBalance, 
+  onToggleBalance, 
+  onRefresh, 
+  refreshing, 
+  availableChains 
+}) => {
+  return (
+    <div className="flex items-center justify-end mb-2">
+
+
+      <div className="flex items-center gap-2">
+        <Dropdown>
+          <DropdownTrigger>
+            <Button 
+              variant="shadow" 
+              size="sm"
+              startContent={selectedChain === 'all' ? <Layers className="w-4 h-4" /> : <div className="w-4 h-4 rounded-full bg-primary" />}
+              endContent={<ChevronDown className="w-4 h-4" />}
+              className="min-w-24 h-7"
+            >
+              {selectedChain === 'all' ? 'All Chains' : SUPPORTED_CHAINS.find(c => c.id === selectedChain)?.name || selectedChain}
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu 
+            aria-label="Chain selection"
+            onAction={(key) => onChainChange(key as string)}
+            selectedKeys={[selectedChain]}
+            selectionMode="single"
+          >
+            <DropdownItem key="all" startContent={<Layers className="w-4 h-4" />}>
+              All Chains
+            </DropdownItem>
+            {availableChains.map((chainId) => {
+              const chain = SUPPORTED_CHAINS.find(c => c.id === chainId);
+              return (
+                <DropdownItem key={chainId} startContent={<div className="w-4 h-4 rounded-full bg-primary" />}>
+                  {chain?.name || chainId}
+                </DropdownItem>
+              );
+            })}
+          </DropdownMenu>
+        </Dropdown>
+
+        <Button
+          variant="shadow"
+          size="sm"
+          isIconOnly
+          onPress={onToggleBalance}
+          className="w-7 h-7"
+        >
+          {showBalance ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+        </Button>
+        
+        <Button
+          variant="shadow"
+          size="sm"
+          isIconOnly
+          onPress={onRefresh}
+          isLoading={refreshing}
+          className="w-7 h-7"
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+        </Button>
+
+        <Button
+          variant="shadow"
+          size="sm"
+          isIconOnly
+          className="w-7 h-7"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// Modern Header with Stats
+const ModernWalletHeader: React.FC<{
+  address: string;
+  portfolioData: PortfolioData;
+  showBalance: boolean;
+}> = ({ address, portfolioData, showBalance }) => {
+  const formatCurrency = (value: number | null | undefined) => {
+    if (!showBalance) return '••••••';
+    if (!value) return '$0';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  };
+
+  const handleCopyAddress = () => {
+    copyToClipboard(address);
+  };
+
+  const handleOpenEtherscan = () => {
+    openEtherscan(address, 'address');
+  };
+
+  const totalValue = portfolioData.portfolio?.total?.positions || 0;
+  const change24h = portfolioData.portfolio?.changes?.percent_1d || 0;
+  const positions = portfolioData.positions?.length || 0;
+  const uniqueChains = getUniqueChains(portfolioData.positions || []);
+
+  return (
+    <Card className="overflow-hidden rounded-none">
+      <CardBody className="px-3 py-1.5">
+        <div className="flex items-center justify-between">
+          {/* Left Section - Wallet Info */}
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary-500 via-amber-400 to-pink-400 p-0.5">
+                <div className="w-full h-full rounded-2xl bg-background flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primar-500y/10 to-secondary/10" />
+                  <div className="relative z-10 text-xl font-bold bg-gradient-to-br from-primary-600 to-secondary bg-clip-text text-transparent">
+                    {address.slice(2, 4).toUpperCase()}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm font-semibold">Wallet Portfolio</h2>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2 py-1.5 rounded-lg bg-default-100">
+                  <Wallet className="w-3 h-3 text-default-500" />
+                  <span className="text-xs font-mono text-default-700">
+                    {truncateAddress(address, 6, 4)}
+                  </span>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="light" 
+                  isIconOnly 
+                  onPress={handleCopyAddress}
+                  className="w-4 h-4"
+                >
+                  <Copy className="w-3 h-3" />
+                </Button>
+                <Button 
+                  size="sm" 
+                  variant="light" 
+                  isIconOnly 
+                  onPress={handleOpenEtherscan}
+                  className="w-4 h-4"
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+   
+          {/* Right Section - Enhanced Stats */}
+          <div className="flex items-center gap-4">
+            <div className="text-center px-3 py-2 ">
+         
+              <p className="text-xl font-bold ">{formatCurrency(totalValue)}</p>
+              <div className={`flex items-center justify-center gap-1 font-semibold text-xs ${
+                change24h >= 0 ? 'text-success' : 'text-danger'
+              }`}>
+                {change24h >= 0 ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                {showBalance ? `${Math.abs(change24h).toFixed(2)}%` : '••••'}
+              </div>
+            </div>
+   
+          </div>
+        </div>
+      </CardBody>
+    </Card>
+   );
+};
+
+// Modern Tabs Component
+const ModernTabs: React.FC<{
+  selectedTab: TabKey;
+  onTabChange: (tab: TabKey) => void;
+  tokenCount: number;
+  nftCount: number;
+  children: React.ReactNode;
+}> = ({ selectedTab, onTabChange, tokenCount, nftCount, children }) => {
+  const tabs = [
+    {
+      key: 'tokens' as TabKey,
+      label: 'Tokens',
+      count: tokenCount,
+      icon: Coins,
+      color: 'bg-primary-500'
+    },
+    {
+      key: 'nfts' as TabKey,
+      label: 'NFTs',
+      count: nftCount,
+      icon: Image,
+      color: 'secondary'
+    },
+    {
+      key: 'transactions' as TabKey,
+      label: 'History',
+      count: null,
+      icon: Activity,
+      color: 'warning'
+    }
+  ];
+
+  return (
+    <div className='w-full rounded-2xl lg:rounded-3xl border border-divider bg-gradient-to-br from-white/5 via-white/[0.02] to-transparent backdrop-blur-xl animate-in fade-in-0 duration-100 slide-in-from-bottom-6 p-4 pb-0'>
+               {/* Gradient overlay */}
+               <div className="absolute inset-0 rounded-2xl lg:rounded-3xl  bg-gradient-to-br from-orange-500/5 via-transparent to-pink-500/5" />
+      <div className="pb-0">
+        <div className="flex items-center justify-between w-full">
+          {/* Custom Tab Design */}
+          <div className="flex items-center gap-1 p-1 bg-default-200 rounded-2xl">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => onTabChange(tab.key)}
+                className={`relative flex items-center gap-2 px-2 py-1 rounded-xl text-sm font-medium transition-all duration-75 ${
+                  selectedTab === tab.key
+                    ? 'bg-default-100 shadow-sm text-foreground'
+                    : 'text-default-600 hover:text-foreground hover:bg-default-200/50'
+                }`}
+              >
+                <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors `}>
+                  <tab.icon className="w-3.5 h-3.5" />
+                </div>
+                <span className='text-xs font-semibold'>{tab.label}</span>
+                {tab.count !== null && (
+                  <Chip 
+                    size="sm" 
+                    variant="solid" 
+                    color={selectedTab === tab.key ? tab.color as any : 'default'}
+                    className="text-[10px] min-w-6 h-5"
+                  >
+                    {tab.count}
+                  </Chip>
+                )}
+                
+                {selectedTab === tab.key && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className={`absolute inset-0 bg-gradient-to-r from-${tab.color}/5 to-${tab.color}/10 rounded-lg -z-10`}
+                    transition={{ type: "spring", bounce: 0.2, duration: 0.2 }}
+                  />
+                )}
+              </button>
+            ))}
+          </div>
+
+     
+        </div>
+      </div>
+      
+      <div className="pt-4">
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={selectedTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.1 }}
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+};
 
 export const WalletAnalytics: React.FC<WalletAnalyticsProps> = ({ 
   address,
@@ -121,12 +427,18 @@ export const WalletAnalytics: React.FC<WalletAnalyticsProps> = ({
   // Loading state
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-96 ${className}`}>
-        <div className="text-center">
-          <Spinner size="lg" color="primary" />
-          <p className="mt-4 text-default-500">Loading wallet analytics...</p>
-        </div>
-      </div>
+ 
+         <div className="flex h-[70vh] items-center justify-center">
+        
+         <div className="flex items-center space-x-2">
+     <GooeyLoader />
+          <div className="flex flex-col">
+            <span className="text-xl font-bold">MoneyMappr</span>
+           <p className="text-sm text-muted-foreground">Loading wallet analytics...</p>
+ </div>
+ 
+         </div>
+       </div>
     );
   }
 
@@ -149,13 +461,11 @@ export const WalletAnalytics: React.FC<WalletAnalyticsProps> = ({
 
   const tokenCount = portfolioData.positions?.length || 0;
   const nftCount = 0; // Will be populated by NFT component
-  const transactionCount = 0; // Will be populated by transaction component
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <WalletHeader
-        address={address}
+    <div className={`w-full  space-y-2 ${className}`}>
+      {/* Top Controls Bar */}
+      <TopControlsBar
         selectedChain={selectedChain}
         onChainChange={setSelectedChain}
         showBalance={showBalance}
@@ -165,14 +475,20 @@ export const WalletAnalytics: React.FC<WalletAnalyticsProps> = ({
         availableChains={availableChains}
       />
 
-      {/* Portfolio Stats */}
-      <PortfolioStats 
-        portfolioData={portfolioData} 
-        showBalance={showBalance} 
-      />
+      {/* Modern Header with Stats */}
+      <WalletHeader
+        address={address}
+        selectedChain={selectedChain}
+        showBalance={showBalance} onChainChange={function (chainId: string): void {
+          throw new Error('Function not implemented.');
+        } } onToggleBalance={function (): void {
+          throw new Error('Function not implemented.');
+        } } onRefresh={function (): void {
+          throw new Error('Function not implemented.');
+        } } availableChains={[]}      />
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Charts Section 
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <PortfolioChart 
             walletAddress={address}
@@ -187,113 +503,41 @@ export const WalletAnalytics: React.FC<WalletAnalyticsProps> = ({
           positions={portfolioData.positions || []} 
           showBalance={showBalance}
         />
-      </div>
+      </div>*/}
 
-      {/* Tabbed Content */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between w-full">
-            <Tabs
-              selectedKey={selectedTab}
-              onSelectionChange={(key) => setSelectedTab(key as TabKey)}
-              classNames={{
-                base: "flex-1",
-                tabList: "bg-default-100 p-1 rounded-lg",
-                tab: "px-4 py-2 text-sm font-medium",
-                cursor: "bg-primary shadow-sm"
-              }}
-            >
-              <Tab key="tokens" title={
-                <div className="flex items-center gap-2">
-                  <Coins className="w-4 h-4" />
-                  <span>Tokens</span>
-                  <Chip color="primary" size="sm" variant="flat" className="text-xs">
-                    {tokenCount}
-                  </Chip>
-                </div>
-              } />
-              <Tab key="nfts" title={
-                <div className="flex items-center gap-2">
-                  <Image className="w-4 h-4" />
-                  <span>NFTs</span>
-                  <Chip color="secondary" size="sm" variant="flat" className="text-xs">
-                    {nftCount}
-                  </Chip>
-                </div>
-              } />
-              <Tab key="transactions" title={
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4" />
-                  <span>History</span>
-                  <Chip color="warning" size="sm" variant="flat" className="text-xs">
-                    Recent
-                  </Chip>
-                </div>
-              } />
-            </Tabs>
+      {/* Modern Tabbed Content */}
+      <ModernTabs
+        selectedTab={selectedTab}
+        onTabChange={setSelectedTab}
+        tokenCount={tokenCount}
+        nftCount={nftCount}
+      >
 
-            <Button
-              variant="flat"
-              size="sm"
-              startContent={<Filter className="w-4 h-4" />}
-              className="hidden md:flex ml-4"
-            >
-              Filter
-            </Button>
-          </div>
-        </CardHeader>
-        
-        <CardBody className="pt-0">
-          <AnimatePresence mode="wait">
-            <motion.div 
-              key={selectedTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.2 }}
-            >
-              {selectedTab === 'tokens' && (
-                <TokensList 
-                  address={address}
-                  selectedChain={selectedChain}
-                  showBalance={showBalance}
-                />
-              )}
+        {selectedTab === 'tokens' && (
+          <TokensList 
+            address={address}
+            selectedChain={selectedChain}
+            showBalance={showBalance}
+          />
+        )}
 
-              {selectedTab === 'nfts' && (
-                <NFTsList 
-                  address={address}
-                  selectedChain={selectedChain}
-                  showBalance={showBalance}
-                />
-              )}
+        {selectedTab === 'nfts' && (
+          <NFTsList 
+            address={address}
+            selectedChain={selectedChain}
+            showBalance={showBalance}
+          />
+        )}
 
-              {selectedTab === 'transactions' && (
-                <TransactionsList 
-                  address={address}
-                  selectedChain={selectedChain}
-                  showBalance={showBalance}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
-        </CardBody>
-      </Card>
+        {selectedTab === 'transactions' && (
+          <TransactionsList 
+            address={address}
+            selectedChain={selectedChain}
+            showBalance={showBalance}
+          />
+        )}
+      </ModernTabs>
 
-      {/* Footer */}
-      <div className="flex items-center justify-center gap-4 text-sm text-default-400 pt-4">
-        <div className="flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-          <span>Live Data</span>
-        </div>
-        <span>•</span>
-        <div className="flex items-center gap-1">
-          <Clock className="w-4 h-4" />
-          <span>Updated: {new Date().toLocaleTimeString()}</span>
-        </div>
-        <span>•</span>
-        <span>Powered by Zerion API</span>
-      </div>
     </div>
   );
 };
