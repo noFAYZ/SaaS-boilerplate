@@ -98,12 +98,12 @@ body {
 
 ::-webkit-scrollbar-track {
   background: hsl(var(--muted));
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--muted-foreground));
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -136,7 +136,7 @@ body {
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background-color: hsl(var(--default-300));
-  border-radius: 2px;
+  border-radius: 1px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {

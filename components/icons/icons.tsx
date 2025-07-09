@@ -112,3 +112,28 @@ export function FluentCopy20Filled(props: SVGProps<SVGSVGElement>) {
 export function MaterialIconThemeVerified(props: SVGProps<SVGSVGElement>) {
 	return (<svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" {...props}><path fill="#8bc34a" d="M9 3L8 6H4l1 4l-3 2l3 2l-1 4h4l1 3l3-2l3 2l1-3h4l-1-4l3-2l-3-2l1-4h-4l-1-3l-3 2zm7 5l1 1l-7 7l-3-3l1-1l2 2z" strokeWidth={0.5} stroke="#8bc34a"></path></svg>);
 }
+
+
+export function IconParkOutlineClear(props: SVGProps<SVGSVGElement>) {
+	return (<svg xmlns="http://www.w3.org/2000/svg" width={48} height={48} viewBox="0 0 48 48" {...props}><g fill="none" stroke="currentColor" strokeLinejoin="round" strokeWidth={4}><path strokeLinecap="round" d="M20 5.914h8v8h15v8H5v-8h15z" clipRule="evenodd"></path><path d="M8 40h32V22H8z"></path><path strokeLinecap="round" d="M16 39.898v-5.984m8 5.984v-6m8 6v-5.984M12 40h24"></path></g></svg>);
+}
+
+
+export function SolarTagPriceBoldDuotone(props: SVGProps<SVGSVGElement>) {
+	return (<svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" {...props}><path fill="currentColor" d="m17.967 6.558l-1.83-1.83c-1.546-1.545-2.318-2.318-3.321-2.605c-1.003-.288-2.068-.042-4.197.45l-1.228.283c-1.792.413-2.688.62-3.302 1.233S3.27 5.6 2.856 7.391l-.284 1.228c-.491 2.13-.737 3.194-.45 4.197c.288 1.003 1.061 1.775 2.606 3.32l1.83 1.83C9.248 20.657 10.592 22 12.262 22c1.671 0 3.015-1.344 5.704-4.033c2.69-2.69 4.034-4.034 4.034-5.705c0-1.67-1.344-3.015-4.033-5.704" opacity={0.5} strokeWidth={0.5} stroke="currentColor"></path><path fill="currentColor" d="M11.147 14.328c-.673-.672-.667-1.638-.265-2.403a.75.75 0 0 1 1.04-1.046c.34-.18.713-.276 1.085-.272a.75.75 0 0 1-.014 1.5a.88.88 0 0 0-.609.277c-.387.387-.285.775-.177.884c.11.109.497.21.884-.177c.784-.784 2.138-1.044 3.006-.177c.673.673.667 1.639.264 2.404a.75.75 0 0 1-1.04 1.045a2.2 2.2 0 0 1-1.472.232a.75.75 0 1 1 .302-1.47c.177.037.463-.021.708-.266c.388-.388.286-.775.177-.884s-.496-.21-.884.177c-.784.784-2.138 1.044-3.005.176m-1.126-4.035a2 2 0 1 0-2.828-2.828a2 2 0 0 0 2.828 2.828" strokeWidth={0.5} stroke="currentColor"></path></svg>);
+}
+
+
+export function LetsIconsPieChartFill(props: SVGProps<SVGSVGElement>) {
+	return (<svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" {...props}><g fill="currentColor" fillRule="evenodd" clipRule="evenodd" strokeWidth={0.5} stroke="currentColor"><path d="M17.906 17.231c.393.45 1.093.458 1.438-.028a9 9 0 0 0 1.562-6.503c-.086-.59-.714-.9-1.268-.678l-4.645 1.858a1 1 0 0 0-.38 1.587zM19.346 6.8c.344.487.103 1.144-.45 1.366l-4.525 1.81A1 1 0 0 1 13 9.044V4.175c0-.597.52-1.065 1.1-.925a9 9 0 0 1 5.245 3.55"></path><path d="M11 3.156c0-.592-.513-1.059-1.092-.935a10 10 0 1 0 6.957 18.516c.517-.288.596-.977.207-1.422L11.285 12.7a1.15 1.15 0 0 1-.285-.757z"></path></g></svg>);
+}
+
+
+export function MynauiArrowUpDownSolid(props: SVGProps<SVGSVGElement>) {
+	return (<svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" {...props}><path fill="currentColor" d="M7.5 18.25a.75.75 0 0 0 .75-.75v-6.97h3.28a.75.75 0 0 0 0-1.06l-3.5-3.5a.75.75 0 0 0-1.06 0l-3.5 3.5a.75.75 0 0 0 0 1.06h3.28v6.97c0 .414.336.75.75.75m9-12.5a.75.75 0 0 1 .75.75v6.97h3.28a.75.75 0 0 1 0 1.06l-3.5 3.5a.75.75 0 0 1-1.06 0l-3.5-3.5a.75.75 0 0 1 0-1.06h3.28V6.5a.75.75 0 0 1 .75-.75" strokeWidth={0.5} stroke="currentColor"></path></svg>);
+}
+
+
+export function SolarWalletBoldDuotone(props: SVGProps<SVGSVGElement>) {
+	return (<svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" {...props}><path fill="currentColor" d="M5.75 7a.75.75 0 0 0 0 1.5h4a.75.75 0 0 0 0-1.5z" strokeWidth={0.5} stroke="currentColor"></path><path fill="currentColor" fillRule="evenodd" d="M21.188 8.004q-.094-.005-.2-.004h-2.773C15.944 8 14 9.736 14 12s1.944 4 4.215 4h2.773q.106.001.2-.004c.923-.056 1.739-.757 1.808-1.737c.004-.064.004-.133.004-.197V9.938c0-.064 0-.133-.004-.197c-.069-.98-.885-1.68-1.808-1.737m-3.217 5.063c.584 0 1.058-.478 1.058-1.067c0-.59-.474-1.067-1.058-1.067s-1.06.478-1.06 1.067c0 .59.475 1.067 1.06 1.067" clipRule="evenodd" strokeWidth={0.5} stroke="currentColor"></path><path fill="currentColor" d="M21.14 8.002c0-1.181-.044-2.448-.798-3.355a4 4 0 0 0-.233-.256c-.749-.748-1.698-1.08-2.87-1.238C16.099 3 14.644 3 12.806 3h-2.112C8.856 3 7.4 3 6.26 3.153c-1.172.158-2.121.49-2.87 1.238c-.748.749-1.08 1.698-1.238 2.87C2 8.401 2 9.856 2 11.694v.112c0 1.838 0 3.294.153 4.433c.158 1.172.49 2.121 1.238 2.87c.749.748 1.698 1.08 2.87 1.238c1.14.153 2.595.153 4.433.153h2.112c1.838 0 3.294 0 4.433-.153c1.172-.158 2.121-.49 2.87-1.238q.305-.308.526-.66c.45-.72.504-1.602.504-2.45l-.15.001h-2.774C15.944 16 14 14.264 14 12s1.944-4 4.215-4h2.773q.079 0 .151.002" opacity={0.5} strokeWidth={0.5} stroke="currentColor"></path></svg>);
+}

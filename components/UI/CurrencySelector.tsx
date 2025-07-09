@@ -9,16 +9,11 @@ import {
   DropdownSection 
 } from "@heroui/dropdown";
 import { Button } from "@heroui/button";
-import { Input } from "@heroui/input";
-import { Badge } from "@heroui/badge";
-import { Chip } from "@heroui/chip";
 import { cn } from "@heroui/theme";
 import { 
-  Search, 
   Globe, 
   ChevronDown, 
-  Check, 
-  Star 
+  Check 
 } from "lucide-react";
 
 // Types
@@ -28,8 +23,6 @@ interface Currency {
   symbol: string;
   flag?: string;
   popular?: boolean;
-  trend?: "up" | "down" | "neutral";
-  trendValue?: string;
 }
 
 interface CurrencyProps {
@@ -37,7 +30,6 @@ interface CurrencyProps {
   onChange?: (currency: Currency) => void;
   variant?: "flat" | "bordered" | "light" | "solid";
   size?: "sm" | "md" | "lg";
-  label?: string;
   className?: string;
 }
 
@@ -45,32 +37,43 @@ export function CurrencySelector({
   value = "USD",
   onChange,
   variant = "flat",
-  size = "md",
-  label,
+  size = "sm",
   className
 }: CurrencyProps) {
   // States
   const [selectedCurrency, setSelectedCurrency] = useState<Currency | null>(null);
   
-  // Currency data
+  // Currency data - simplified and clean
   const currencies: Currency[] = [
-    { code: "USD", name: "US Dollar", symbol: "$", popular: true, flag: "🇺🇸", trend: "neutral", trendValue: "0.0%" },
-    { code: "EUR", name: "Euro", symbol: "€", popular: true, flag: "🇪🇺", trend: "up", trendValue: "+0.3%" },
-    { code: "GBP", name: "British Pound", symbol: "£", popular: true, flag: "🇬🇧", trend: "down", trendValue: "-0.2%" },
-    { code: "JPY", name: "Japanese Yen", symbol: "¥", popular: true, flag: "🇯🇵", trend: "up", trendValue: "+0.5%" },
-    { code: "CAD", name: "Canadian Dollar", symbol: "C$", flag: "🇨🇦", trend: "neutral", trendValue: "+0.1%" },
-    { code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "🇦🇺", trend: "down", trendValue: "-0.4%" },
-    { code: "CHF", name: "Swiss Franc", symbol: "Fr", flag: "🇨🇭", trend: "up", trendValue: "+0.2%" },
-    { code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "🇨🇳", trend: "neutral", trendValue: "0.0%" }
+    { code: "USD", name: "US Dollar", symbol: "$", popular: true, flag: "🇺🇸" },
+    { code: "EUR", name: "Euro", symbol: "€", popular: true, flag: "🇪🇺" },
+    { code: "GBP", name: "British Pound", symbol: "£", popular: true, flag: "🇬🇧" },
+    { code: "JPY", name: "Japanese Yen", symbol: "¥", popular: true, flag: "🇯🇵" },
+    { code: "CAD", name: "Canadian Dollar", symbol: "C$", flag: "🇨🇦" },
+    { code: "AUD", name: "Australian Dollar", symbol: "A$", flag: "🇦🇺" },
+    { code: "CHF", name: "Swiss Franc", symbol: "CHF", flag: "🇨🇭" },
+    { code: "CNY", name: "Chinese Yuan", symbol: "¥", flag: "🇨🇳" },
+    { code: "KRW", name: "South Korean Won", symbol: "₩", flag: "🇰🇷" },
+    { code: "SGD", name: "Singapore Dollar", symbol: "S$", flag: "🇸🇬" }
   ];
   
+  // Initialize selected currency
+  useEffect(() => {
+    const initialCurrency = currencies.find(c => c.code === value) || currencies[0];
+    setSelectedCurrency(initialCurrency);
+  }, [value]);
+
   // Get popular currencies
   const popularCurrencies = useMemo(() => 
     currencies.filter(c => c.popular),
-    [currencies]
+    []
   );
-  
 
+  // Get other currencies
+  const otherCurrencies = useMemo(() => 
+    currencies.filter(c => !c.popular),
+    []
+  );
   
   // Handle selection
   const handleSelect = (currency: Currency) => {
@@ -80,103 +83,106 @@ export function CurrencySelector({
     }
   };
   
-  // Helper to get trend color
-  const getTrendColor = (trend?: "up" | "down" | "neutral") => {
-    if (trend === "up") return "success";
-    if (trend === "down") return "danger";
-    return "default";
-  };
-  
-  // Button sizing based on prop
-  const buttonSizeClass = {
-    sm: "h-8 text-xs",
-    md: "h-10 text-sm", 
-    lg: "h-12 text-base"
-  }[size];
-  
   return (
     <div className={cn("relative", className)}>
-      {label && (
-        <label className="block text-sm font-medium text-default-700 mb-1.5">
-          {label}
-        </label>
-      )}
-      
-      <Dropdown className="transition-all duration-0 ease-in-out">
+      <Dropdown 
+        placement="bottom-end"
+        classNames={{
+          content: "min-w-[200px] p-0"
+        }}
+      >
         <DropdownTrigger>
           <Button
             variant={variant}
-            radius="full"
-            size="sm"
-            startContent={    selectedCurrency ? (
-              <div className="flex items-center  w-6 h-6 bg-secondary-100 rounded-full text-center gap-2">
-                <span className="text-sm text-center">{selectedCurrency.flag}</span>
-                
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Globe size={18} />
-                <span>Select</span>
-              </div>
-            )   }
-            endContent={<ChevronDown size={16} />}
-            className={cn(buttonSizeClass, " justify-between bg-default-100 px-1")}
+            size={size}
+            className={cn(
+              "justify-between min-w-[80px]  rounded-2xl",
+              size === "sm" && "h-8 px-2 text-xs",
+              size === "md" && "h-10 px-3 text-sm",
+              size === "lg" && "h-12 px-4 text-base"
+            )}
+            startContent={
+              selectedCurrency ? (
+                <div className="flex items-center justify-center w-5 h-5 rounded-full bg-default-200/50 text-xs">
+                  {selectedCurrency.flag}
+                </div>
+              ) : (
+                <Globe size={16} className="text-default-500" />
+              )
+            }
+            endContent={<ChevronDown size={14} className="text-default-400" />}
           >
-            {selectedCurrency && (<span className="font-semibold text-xs">{selectedCurrency.code}</span>) }
+            <span className="font-medium text-xs">
+              {selectedCurrency?.code || "USD"}
+            </span>
           </Button>
         </DropdownTrigger>
         
-        <DropdownMenu aria-label="Currency selection">
-          {/* Popular currencies section */}
-          <DropdownSection title="Popular Currencies">
+        <DropdownMenu 
+          aria-label="Currency selection"
+          className="p-1"
+          itemClasses={{
+            base: "rounded-lg"
+          }}
+        >
+          {/* Popular currencies */}
+          <DropdownSection 
+            title="Popular" 
+            classNames={{
+              heading: "text-xs font-medium text-default-500 px-2 pb-1"
+            }}
+          >
             {popularCurrencies.map((currency) => (
               <DropdownItem
                 key={`popular-${currency.code}`}
+                className="py-2"
                 startContent={
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-default-100 text-sm">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-default-100 text-xs">
                     {currency.flag}
                   </div>
                 }
                 endContent={
-                  <div className="flex items-center gap-2">
-                
-                    {selectedCurrency?.code === currency.code && (
-                      <Check size={16} className="text-primary" />
-                    )}
-                  </div>
+                  selectedCurrency?.code === currency.code && (
+                    <Check size={14} className="text-primary" />
+                  )
                 }
-                className="w-full rounded-2xl"
                 onPress={() => handleSelect(currency)}
-                description={`${currency.symbol} · ${currency.name}`}
               >
-                <span className="font-medium text-xs">{currency.code}</span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">{currency.code}</span>
+                  <span className="text-xs text-default-500">{currency.symbol}</span>
+                </div>
               </DropdownItem>
             ))}
           </DropdownSection>
           
-          {/* All currencies section */}
-          <DropdownSection title="All Currencies">
-            {currencies.filter(c => !c.popular).map((currency) => (
+          {/* Other currencies */}
+          <DropdownSection 
+            title="Others" 
+            classNames={{
+              heading: "text-xs font-medium text-default-500 px-2 pb-1"
+            }}
+          >
+            {otherCurrencies.map((currency) => (
               <DropdownItem
-              className="w-full rounded-2xl"
-                key={`currency-${currency.code}`}
+                key={`other-${currency.code}`}
+                className="py-2"
                 startContent={
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-default-100 text-xs">
+                  <div className="flex items-center justify-center w-6 h-6 rounded-full bg-default-100 text-xs">
                     {currency.flag}
                   </div>
                 }
                 endContent={
-                  <div className="flex items-center gap-2">
-               
-                    {selectedCurrency?.code === currency.code && (
-                      <Check size={16} className="text-primary" />
-                    )}
-                  </div>
+                  selectedCurrency?.code === currency.code && (
+                    <Check size={14} className="text-primary" />
+                  )
                 }
                 onPress={() => handleSelect(currency)}
-                description={`${currency.symbol} · ${currency.name}`}
               >
-                <span className="font-medium text-xs">{currency.code} </span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-sm">{currency.code}</span>
+                  <span className="text-xs text-default-500">{currency.symbol}</span>
+                </div>
               </DropdownItem>
             ))}
           </DropdownSection>

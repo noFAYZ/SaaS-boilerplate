@@ -249,7 +249,7 @@ export const Sidebar = ({ className }: SidebarProps) => {
               aria-label="Go to homepage"
             >
               <div className="relative glow-primary">
-                <LogoMappr   />
+                <LogoMappr  className="h-8 w-8" />
               </div>
               <span className="font-bold text-lg tracking-tight">MoneyMappr</span>
             </NextLink>
