@@ -169,7 +169,7 @@ export class SearchService {
           url: `/tokens/${attrs.symbol.toLowerCase()}`,
           badge: this.getTokenBadge(marketData),
           metadata: {
-            value: marketData.price ? formatCurrency(marketData.price, true, true) : undefined,
+            value: marketData.price ? marketData.price : undefined,
             change: marketData.percent_change_24h,
             symbol: attrs.symbol,
             logoUrl,

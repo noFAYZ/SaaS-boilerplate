@@ -10,7 +10,14 @@ export const formatCurrency = (value: number | undefined, showBalance = true, co
   if (compact) {
     if (numValue >= 1000000) return `$${(numValue / 1000000).toFixed(1)}M`;
     if (numValue >= 1000) return `$${(numValue / 1000).toFixed(1)}K`;
-    return `$${numValue.toFixed(0)}`;
+    if (numValue >= 1) return `$${(numValue / 1000).toFixed(2)}`;
+    if (numValue >= 0.01) return `$${(numValue / 1000).toFixed(3)}`;
+    if (numValue >= 0.001) return `$${(numValue / 1000).toFixed(4)}`;
+    if (numValue >= 0.0001) return `$${(numValue / 1000).toFixed(5)}`;
+    if (numValue >= 0.00001) return `$${(numValue / 1000).toFixed(6)}`;
+    if (numValue >= 0.000001) return `$${(numValue / 1000).toFixed(7)}`;
+    const formatted = numValue.toFixed(10);
+    return `${parseFloat(formatted)}`;
   }
   
   return new Intl.NumberFormat('en-US', {
@@ -89,6 +96,36 @@ export const calculateChartMetrics = (chartData: ChartDataPoint[]): ChartMetrics
     low: minValue
   };
 };
+ // Human-readable price formatting function
+ export const formatTokenPrice = (price: number): string => {
+  if (price === 0) return '$0.00';
+  
+  if (price >= 1000000) {
+    return `${(price / 1000000).toFixed(2)}M`;
+  } else if (price >= 1000) {
+    return `${(price / 1000).toFixed(2)}K`;
+  } else if (price >= 1) {
+    return `${price.toFixed(2)}`;
+  } else if (price >= 0.01) {
+    return `${price.toFixed(3)}`;
+  } else if (price >= 0.001) {
+    return `${price.toFixed(4)}`;
+  } else if (price >= 0.0001) {
+    return `${price.toFixed(5)}`;
+  } else if (price >= 0.00001) {
+    return `${price.toFixed(6)}`;
+  } else if (price >= 0.000001) {
+    return `${price.toFixed(7)}`;
+  } else if (price >= 0.0000001) {
+    return `${price.toFixed(8)}`;
+  } else {
+    // For extremely small numbers, show up to 10 decimal places
+    const formatted = price.toFixed(10);
+    // Remove trailing zeros
+    return `${parseFloat(formatted)}`;
+  }
+};
+
 
 export const getNFTRarity = (lastPrice: number = 0) => {
   for (const [level, config] of Object.entries(NFT_RARITY_LEVELS)) {

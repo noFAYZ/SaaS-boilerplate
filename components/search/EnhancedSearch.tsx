@@ -1,7 +1,7 @@
 // components/search/EnhancedSearch.tsx
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect, memo } from "react";
+import React, { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
 import { Button } from "@heroui/button";
 import { Input } from "@heroui/input";
 import { Badge } from "@heroui/badge";
@@ -62,7 +62,7 @@ interface EnhancedSearchProps {
   showMetrics?: boolean;
 }
 
-// Modern Search Input with enhanced UX
+// Modern Search Input with enhanced UX (KEPT ORIGINAL UI)
 const SearchInput = memo<{
   value: string;
   onChange: (value: string) => void;
@@ -99,18 +99,17 @@ const SearchInput = memo<{
         onKeyDown={onKeyDown}
         onFocus={onFocus}
         placeholder={placeholder}
-        size="lg"
+        size="md"
         variant="flat"
         autoFocus={autoFocus}
         classNames={{
           base: "w-full",
-          inputWrapper: `
-            
+          inputWrapper: ` bg-default-200
             ${hasError 
               ? 'bg-danger-50 dark:bg-danger-950/20' 
               : isOpen 
-                ? 'bg-content3  shadow-lg' 
-                : '  hover:shadow-md'
+                ? 'bg-content3 shadow-lg' 
+                : 'hover:shadow-md'
             }
           `,
           input: "text-sm font-medium placeholder:text-default-400",
@@ -120,10 +119,10 @@ const SearchInput = memo<{
           <div className="flex items-center gap-2">
             {isLoading ? (
               <div className="relative w-8 h-8">
-                <LogoLoader   />
+                <LogoLoader />
               </div>
             ) : (
-              <div className={`p-1.5 rounded-xl transition-colors ${
+              <div className={`p-1.5 rounded-xl  ${
                 hasError 
                   ? 'bg-danger-100 text-danger-600' 
                   : isOpen 
@@ -133,7 +132,6 @@ const SearchInput = memo<{
                 <Search size={18} />
               </div>
             )}
-          
           </div>
         }
         endContent={
@@ -187,7 +185,7 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
   const containerRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Enhanced search hook
+  // Enhanced search hook - FIXED: Set immediate to false to prevent initial load
   const {
     query,
     setQuery,
@@ -200,74 +198,44 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
     getTrending,
     filters,
     setFilters,
-    metrics,
     retry
   } = useSearch({
     maxResults,
     filters: { categories },
     enableCache: true,
-    retryAttempts: 2
+    retryAttempts: 2,
+    immediate: false // FIXED: Don't load tokens on mount
   });
 
   // Determine if component is controlled
   const finalIsOpen = controlledOpen !== undefined ? controlledOpen : isOpen;
 
-  // Filter results by active category
-  const filteredResults = React.useMemo(() => {
-    if (!activeCategory) return results;
-    return results.filter(result => result.category === activeCategory);
+  // FIXED: Safe category handling with proper fallbacks
+  const filteredResults = useMemo(() => {
+    // Safely handle results that might not have category property
+    const safeResults = results.map(result => ({
+      ...result,
+      category: (result.category as SearchCategory) || 'tokens' // Default fallback
+    }));
+
+    if (!activeCategory) return safeResults;
+    return safeResults.filter(result => result.category === activeCategory);
   }, [results, activeCategory]);
 
-  // Category counts with enhanced data
-  const categoryCounts = React.useMemo(() => {
-    const counts: Record<SearchCategory, number> = {
-      tokens: 0,
-      wallets: 0,
-      nfts: 0,
-      defi: 0
-    };
-    
-    results.forEach(result => {
-      if (counts[result.category] !== undefined) {
-        counts[result.category]++;
-      }
-    });
-    
-    return counts;
+  // FIXED: Safe category counting
+  const categories_with_counts = useMemo(() => {
+    const cats = Array.from(new Set(results.map(item => (item.category as SearchCategory) || 'tokens')));
+    return cats.map(cat => ({
+      name: cat,
+      count: results.filter(item => ((item.category as SearchCategory) || 'tokens') === cat).length,
+      icon: cat === 'wallets' ? '👛' : 
+            cat === 'tokens' ? '🪙' : 
+            cat === 'defi' ? '🏦' : 
+            cat === 'nfts' ? '🎨' : '🔍'
+    }));
   }, [results]);
 
-  // Enhanced category configurations
-  const getCategoryConfig = (category: SearchCategory) => {
-    const configs = {
-      tokens: { 
-        icon: Coins, 
-        color: 'primary' as const,
-        emoji: '🪙',
-        description: 'Cryptocurrencies and tokens'
-      },
-      wallets: { 
-        icon: Wallet, 
-        color: 'secondary' as const,
-        emoji: '👛',
-        description: 'Wallet addresses and ENS'
-      },
-      nfts: { 
-        icon: Award, 
-        color: 'success' as const,
-        emoji: '🖼️',
-        description: 'Non-fungible tokens'
-      },
-      defi: { 
-        icon: Zap, 
-        color: 'warning' as const,
-        emoji: '🏦',
-        description: 'DeFi protocols and pools'
-      }
-    };
-    return configs[category];
-  };
-
-  // Handle open/close with enhanced UX
+  // Event handlers
   const handleOpen = useCallback(() => {
     const newOpen = true;
     if (onOpenChange) {
@@ -275,17 +243,8 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
     } else {
       setIsOpen(newOpen);
     }
-    
-    // Auto-focus input with slight delay for better UX
-    setTimeout(() => {
-      inputRef.current?.focus();
-    }, 50);
-    
-    // Load trending if no query
-    if (!query.trim()) {
-      getTrending();
-    }
-  }, [onOpenChange, query, getTrending]);
+    setSelectedIndex(-1);
+  }, [onOpenChange]);
 
   const handleClose = useCallback(() => {
     const newOpen = false;
@@ -294,23 +253,16 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
     } else {
       setIsOpen(newOpen);
     }
-    setQuery("");
     setSelectedIndex(-1);
     setActiveCategory(null);
-    setShowFilters(false);
-  }, [onOpenChange, setQuery]);
+  }, [onOpenChange]);
 
-  // Enhanced item selection with analytics
   const handleItemSelect = useCallback((item: SearchResult) => {
     onItemSelect?.(item);
     navigateToResult(item);
     handleClose();
-    
-    // Reset selection
-    setSelectedIndex(-1);
   }, [onItemSelect, navigateToResult, handleClose]);
 
-  // Enhanced keyboard navigation with accessibility
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (!finalIsOpen) return;
 
@@ -323,29 +275,11 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
         break;
       case 'ArrowDown':
         e.preventDefault();
-        setSelectedIndex(prev => {
-          const newIndex = prev < items.length - 1 ? prev + 1 : prev;
-          // Scroll selected item into view
-          setTimeout(() => {
-            const element = resultsRef.current?.children[newIndex] as HTMLElement;
-            element?.scrollIntoView({ block: 'nearest' });
-          }, 0);
-          return newIndex;
-        });
+        setSelectedIndex(prev => (prev < items.length - 1 ? prev + 1 : prev));
         break;
       case 'ArrowUp':
         e.preventDefault();
-        setSelectedIndex(prev => {
-          const newIndex = prev > 0 ? prev - 1 : -1;
-          // Scroll selected item into view
-          setTimeout(() => {
-            if (newIndex >= 0) {
-              const element = resultsRef.current?.children[newIndex] as HTMLElement;
-              element?.scrollIntoView({ block: 'nearest' });
-            }
-          }, 0);
-          return newIndex;
-        });
+        setSelectedIndex(prev => (prev > 0 ? prev - 1 : -1));
         break;
       case 'Enter':
         e.preventDefault();
@@ -354,18 +288,13 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
         }
         break;
       case 'Tab':
-        if (!e.shiftKey && items.length > 0) {
+        if (enableFilters) {
           e.preventDefault();
-          // Cycle through categories
-          setActiveCategory(prev => {
-            const currentIndex = prev ? categories.indexOf(prev) : -1;
-            const nextIndex = currentIndex < categories.length - 1 ? currentIndex + 1 : 0;
-            return categories[nextIndex];
-          });
+          setShowFilters(!showFilters);
         }
         break;
     }
-  }, [finalIsOpen, filteredResults, selectedIndex, handleClose, handleItemSelect, categories]);
+  }, [finalIsOpen, filteredResults, selectedIndex, handleClose, handleItemSelect, enableFilters, showFilters]);
 
   // Enhanced global shortcuts
   useEffect(() => {
@@ -432,24 +361,56 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
         autoFocus={autoFocus}
       />
 
-      {/* Enhanced Dropdown */}
+      {/* Enhanced Dropdown - KEEPING ORIGINAL UI STRUCTURE */}
       {finalIsOpen && (
         <div className="absolute top-full left-0 right-0 mt-2 z-50 animate-in fade-in slide-in-from-top-1 duration-100">
           <Card className="border border-divider shadow-xl bg-content1 overflow-hidden max-h-[75vh]">
             
-            {/* Enhanced Header with Status */}
-            <div className="p-4 border-b border-divider bg-content2/30">
-              <div className="flex items-center justify-between mb-3">
+            {/* Enhanced Header with Status - KEEPING ORIGINAL LAYOUT */}
+            <div className="p-3 border-b border-divider bg-content2">
+              <div className="flex items-center justify-between ">
+                <div className="flex items-center ">
+                     {/* Enhanced Category Navigation - KEEPING ORIGINAL STYLE */}
+              <div className="flex flex-wrap gap-1.5">
+                <Chip
+                  size="sm"
+                  variant={"flat"}
+                  color={!activeCategory ? "warning" : "default"}
+                  className={`cursor-pointer rounded-md text-[11px] font-semibold h-5 ${!activeCategory ? 'bg-warning-100 text-warning-700' : ''}`}
+                  onClick={() => setActiveCategory(null)}
+                >
+                  All ({filteredResults.length})
+                </Chip>
+                {categories_with_counts.map((category) => (
+                  <Chip
+                    key={category.name}
+                    size="sm"
+                    variant={activeCategory === category.name ? "solid" : "flat"}
+                    color={activeCategory === category.name ? "primary" : "default"}
+                    className="cursor-pointer capitalize rounded-md text-[11px] font-semibold h-5"
+                    startContent={<span className="text-xs">{category.icon}</span>}
+                    onClick={() => setActiveCategory(category.name)}
+                  >
+                    {category.name} ({category.count})
+                  </Chip>
+                ))}
+              </div>
+
+
+              
+                </div>
+
                 <div className="flex items-center gap-2">
-    
-                  <Button
+
+                <Button
                     size="sm"
                     variant="flat"
                     startContent={showBalance ? <Eye size={14} /> : <EyeOff size={14} />}
                     onPress={() => setShowBalance(!showBalance)}
-                    className="h-7"
+                    className="h-5 px-0.5 rounded-md text-[11px] font-semibold"
+                    isIconOnly
                   >
-                    {showBalance ? 'Hide' : 'Show'} Values
+                   
                   </Button>
                   
                   {enableFilters && (
@@ -457,9 +418,9 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
                       size="sm"
                       variant={showFilters ? "solid" : "flat"}
                       color={showFilters ? "primary" : "default"}
-                      startContent={<Filter size={14} />}
+                      startContent={<Filter size={12} />}
                       onPress={() => setShowFilters(!showFilters)}
-                      className="h-7"
+                      className="h-5 px-0.5 rounded-md text-[11px] font-medium"
                     >
                       Filters
                     </Button>
@@ -469,143 +430,46 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
                     <Button
                       size="sm"
                       variant="flat"
-                      color="primary"
+                      color="warning"
                       startContent={<TrendingUp size={14} />}
                       onPress={retry}
-                      className="h-7"
+                      className="h-5 px-0.5 rounded-md text-[11px] font-medium"
                     >
                       Retry
                     </Button>
                   )}
-                </div>
 
-                <div className="flex items-center gap-2">
                   {recentSearches.length > 0 && (
                     <Button
                       size="sm"
-                      variant="light"
+                      variant="flat"
+                      color="danger"
                       startContent={<Trash2 size={12} />}
                       onPress={clearHistory}
-                      className="h-6 px-2 text-xs text-danger"
+                      className="h-5 px-0.5 rounded-md text-[11px] text-danger font-medium"
                     >
                       Clear
                     </Button>
                   )}
-                  <Chip
-                    size="sm"
-                    variant="flat"
-                    content={`${filteredResults.length}`}
-                  >
-                    <span className="text-xs">Results</span>
-                  </Chip>
+                 
                 </div>
               </div>
 
-              {/* Enhanced Category Navigation */}
-              <div className="flex flex-wrap gap-1.5">
-                <Chip
-                  size="sm"
-                  variant={"flat"}
-                  color={!activeCategory ? "warning" : "default"}
-     
-                  className={`cursor-pointer rounded-lg  h-6 ${!activeCategory ? ' ' : ''}`}
-                  startContent={<Globe size={12} />}
-                  onClick={() => setActiveCategory(null)}
-                  endContent={results.length}
-                >
-                  All 
-                </Chip>
-                {categories.map(category => {
-                  const config = getCategoryConfig(category);
-                  const IconComponent = config.icon;
-                  const isActive = activeCategory === category;
-                  
-                  return (
-                    <Chip
-                      key={category}
-                      size="sm"
-                      variant={"flat"}
-                      color={isActive ? "warning" : "default"}
-                      className={`cursor-pointer capitalize rounded-lg h-6 ${isActive ? '' : ''} `}
-                      startContent={<IconComponent size={12} />}
-                      onClick={() => setActiveCategory(category)}
-                      endContent={categoryCounts[category]}
-                    >
-                      {category} 
-                    </Chip>
-                  );
-                })}
-              </div>
-
-              {/* Performance Metrics (if enabled) */}
-              {showMetrics && metrics.totalSearches > 0 && (
-                <div className="mt-3 p-2 bg-default-100 dark:bg-default-900/30 rounded-lg">
-                  <div className="grid grid-cols-4 gap-2 text-xs">
-                    <div className="text-center">
-                      <div className="font-semibold text-primary">{metrics.totalSearches}</div>
-                      <div className="text-default-500">Searches</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-success">{Math.round(metrics.avgResponseTime)}ms</div>
-                      <div className="text-default-500">Avg Time</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="font-semibold text-warning">{Math.round(metrics.cacheHitRate * 100)}%</div>
-                      <div className="text-default-500">Cache Hit</div>
-                    </div>
-                    <div className="text-center">
-                      <div className={`font-semibold ${metrics.isHealthy ? 'text-success' : 'text-danger'}`}>
-                        {metrics.isHealthy ? '✓' : '⚠'}
-                      </div>
-                      <div className="text-default-500">Health</div>
-                    </div>
-                  </div>
-                </div>
-              )}
+           
             </div>
 
-            {/* Enhanced Filters Panel */}
+            {/* Filters Panel */}
             {showFilters && enableFilters && (
-              <div className="animate-in slide-in-from-top-1 duration-200">
-                <SearchFiltersPanel
-                  filters={filters}
-                  onFiltersChange={setFilters}
-                  categories={categories}
-                />
-              </div>
+              <SearchFiltersPanel
+                filters={filters}
+                onFiltersChange={setFilters}
+                categories={categories}
+              />
             )}
 
-            {/* Enhanced Results Section */}
-            <CardBody className="p-0 max-h-96 overflow-y-auto">
-              {error ? (
-                <div className="p-8 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-danger-100 dark:bg-danger-900/30 rounded-xl mb-3">
-                    <AlertTriangle className="w-6 h-6 text-danger-500" />
-                  </div>
-                  <h3 className="font-semibold text-danger mb-1">Search Error</h3>
-                  <p className="text-danger-600 text-sm mb-3">{error}</p>
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    onPress={retry}
-                  >
-                    Try Again
-                  </Button>
-                </div>
-              ) : filteredResults.length > 0 ? (
-                <div ref={resultsRef} className="divide-y divide-default-100">
-                  {filteredResults.map((item, index) => (
-                    <SearchResultItem
-                      key={item.id}
-                      item={item}
-                      isSelected={index === selectedIndex}
-                      showBalance={showBalance}
-                      onSelect={() => handleItemSelect(item)}
-                    />
-                  ))}
-                </div>
-              ) : isLoading ? (
+            {/* Results */}
+            <CardBody className="p-0">
+              {isLoading ? (
                 <div className="p-8 text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-primary-100 dark:bg-primary-900/30 rounded-xl mb-3">
                     <Spinner size="md" color="primary" />
@@ -614,36 +478,56 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
                   <p className="text-default-500 text-sm">Finding blockchain data</p>
                 </div>
               ) : query ? (
-                <div className="p-8 text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-default-100 rounded-xl mb-3">
-                    <Search className="w-6 h-6 text-default-400" />
+                filteredResults.length > 0 ? (
+                  <div ref={resultsRef} className="max-h-96 overflow-y-auto ">
+                    {filteredResults.map((result, index) => (
+                      <SearchResultItem
+                        key={`${result.type}-${result.id}-${index}`}
+                        result={result}
+                        isSelected={selectedIndex === index}
+                        onSelect={() => handleItemSelect(result)}
+                        showBalance={showBalance}
+                        variant="detailed"
+                        density="compact"
+                        showActions={false}
+                       
+                      />
+                    ))}
                   </div>
-                  <h3 className="font-semibold text-default-600 mb-1">No results found</h3>
-                  <p className="text-default-400 text-sm mb-3">
-                    Try searching for tokens, wallet addresses, or ENS names
-                  </p>
-                  <Button
-                    size="sm"
-                    color="primary"
-                    variant="flat"
-                    startContent={<Sparkles size={14} />}
-                    onPress={getTrending}
-                  >
-                    Show Trending
-                  </Button>
-                </div>
+                ) : (
+                  <div className="p-8 text-center">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-default-100 rounded-xl mb-3">
+                      <Search className="w-6 h-6 text-default-400" />
+                    </div>
+                    <h3 className="font-semibold text-default-600 mb-1">No results found</h3>
+                    <p className="text-default-400 text-sm mb-3">
+                      Try searching for tokens, wallet addresses, or ENS names
+                    </p>
+                    <Button
+                      size="sm"
+                      color="primary"
+                      variant="flat"
+                      startContent={<Sparkles size={14} />}
+                      onPress={getTrending}
+                    >
+                      Show Trending
+                    </Button>
+                  </div>
+                )
               ) : (
                 <EmptyState
-                          recentSearches={recentSearches}
-                          onRecentSearch={setQuery}
-                          onGetTrending={getTrending} showBalance={true}                />
+                  recentSearches={recentSearches}
+                  onRecentSearch={setQuery}
+                  onGetTrending={getTrending} 
+                  showBalance={showBalance}
+                />
               )}
             </CardBody>
 
-            {/* Enhanced Footer */}
-            <div className="px-4 py-2.5 border-t border-default-200 bg-content2/20">
+            {/* Enhanced Footer - KEEPING ORIGINAL STYLE */}
+            <div className="px-2 py-1 border-t border-default-200 bg-content2/20">
               <div className="flex items-center justify-between text-xs text-default-500">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 ">
                   <kbd className="px-1.5 py-0.5 bg-default-200 rounded text-xs">↑↓</kbd>
                   <span>navigate</span>
                   <kbd className="px-1.5 py-0.5 bg-default-200 rounded text-xs">↵</kbd>
@@ -653,10 +537,13 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
                   <kbd className="px-1.5 py-0.5 bg-default-200 rounded text-xs">esc</kbd>
                   <span>close</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-1 h-1 bg-success-500 rounded-full animate-pulse" />
-                  <span>Powered by Zerion</span>
-                </div>
+                <Chip
+                    size="sm"
+                    variant="flat"
+                    content={`$`}
+                  >
+                    <span className="text-[11px]">Results ({filteredResults.length})</span>
+                  </Chip>
               </div>
             </div>
           </Card>

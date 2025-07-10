@@ -38,6 +38,7 @@ import { navigationItems, userMenuItems } from "@/config/navigation";
 import { useSidebarVisibility } from "@/hooks/useSidebarVisibility";
 import { Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import AdvancedSearch from "./UI/AdvancedSearch";
+import { EnhancedSearch } from "./search";
 
 export const Navbar = () => {
   // State management
@@ -300,7 +301,14 @@ export const Navbar = () => {
           {/* Search Bar (when not in navbar mode) */}
           {navigationMode !== 'navbar' && (
             <NavbarItem className="flex-1 max-w-md mx-4">
-              <AdvancedSearch />
+              <EnhancedSearch
+            placeholder="Search wallets, tokens, NFTs, DeFi protocols..."
+          
+            enableFilters={true}
+            maxResults={15}
+            categories={['tokens', 'wallets', 'nfts', 'defi']}
+            className="w-full"
+          />
             </NavbarItem>
           )}
         </NavbarContent>
