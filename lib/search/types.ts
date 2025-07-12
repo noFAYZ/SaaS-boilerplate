@@ -14,6 +14,11 @@ export interface SearchResult {
   url?: string;
   badge?: string;
   metadata?: {
+    ensDescription?:String;
+    ensTwitter?:String;
+    ensGithub?:String;
+    ensEmail?:String;
+    ensUrl?:String;
     value?: string;
     change?: number;
     verified?: boolean;

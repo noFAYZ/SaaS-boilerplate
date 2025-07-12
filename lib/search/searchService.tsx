@@ -3,7 +3,8 @@ import { zerionSDK, zerionUtils, zerionCache } from '@/lib/zerion';
 import { SearchResult, SearchFilters, SearchCategory } from './types';
 import { formatCurrency, formatNumber } from '@/lib/wallet-analytics/utils';
 import { Avatar } from '@heroui/avatar';
-import { Coins, Wallet, Image, Activity, Target, Award, Zap } from 'lucide-react';
+import { Coins, Wallet, Image, Activity, Target, Award, Zap, Globe } from 'lucide-react';
+import { ensResolver } from '../ens/ensResolver';
 
 // Helper function for ENS validation
 const isValidENS = (name: string): boolean => /^[a-zA-Z0-9\-_]+\.eth$/.test(name);
@@ -197,49 +198,107 @@ export class SearchService {
     filters: SearchFilters,
     signal?: AbortSignal
   ): Promise<SearchResult[]> {
-    if (!isValidAddress(query) && !isValidENS(query)) return [];
+    let address = query;
+    let ensName = null;
+    let ensData = null;
 
+    // Step 1: Resolve ENS to address if needed
+    if (isValidENS(query)) {
+      try {
+        const resolvedAddress = await ensResolver.resolveENS(query);
+        if (resolvedAddress) {
+          address = resolvedAddress;
+          ensName = query;
+          ensData = await ensResolver.getENSData(query);
+        } else {
+          // ENS exists but no address set
+          return [{
+            id: `ens-unresolved-${query}`,
+            title: query,
+            subtitle: 'ENS Domain (No Address Set)',
+            category: 'wallets',
+            icon: <Globe size={16} className="text-gray-400" />,
+            type: 'wallet' as const,
+            url: `/ens/${query}`,
+            metadata: {
+              ens: query,
+              network: 'Ethereum',
+              tags: ['ens', 'unresolved']
+            }
+          }];
+        }
+      } catch (error) {
+        console.error('ENS resolution failed:', error);
+        return [];
+      }
+    }
+    // Step 2: Try reverse ENS resolution for addresses
+    else if (isValidAddress(query)) {
+      try {
+        ensName = await ensResolver.reverseResolve(query);
+        if (ensName) {
+          ensData = await ensResolver.getENSData(ensName);
+        }
+      } catch (error) {
+        console.error('Reverse ENS resolution failed:', error);
+      }
+    } else {
+      return []; // Invalid input
+    }
+
+    // Step 3: Get wallet data using the address
     try {
-      const summary = await zerionUtils.getWalletSummary(query);
+      const summary = await zerionUtils.getWalletSummary(address);
       
       const result: SearchResult = {
-        id: `wallet-${query}`,
-        title: this.formatWalletTitle(query, summary),
-        subtitle: this.getWalletSubtitle(query, summary),
+        id: `wallet-${address}`,
+        title: ensName || this.formatAddress(address),
+        subtitle: ensName ? 
+          `${address.slice(0, 6)}...${address.slice(-4)} • ENS Domain` :
+          'Ethereum Address',
         category: 'wallets',
-        icon: <div className="w-8 h-8 rounded-full bg-secondary-100 flex items-center justify-center">
-          <Wallet size={16} className="text-secondary-600" />
-        </div>,
+        icon: ensData?.avatar ? 
+          <Avatar src={ensData.avatar} size="sm" className="w-8 h-8" /> :
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-secondary-100 to-secondary-200 dark:from-secondary-900 dark:to-secondary-800 flex items-center justify-center">
+            <Wallet size={16} className="text-secondary-600" />
+          </div>,
         type: 'wallet' as const,
-        url: `/wallets/${query}`,
+        url: `/wallets/${address}`,
         badge: this.getWalletBadge(summary),
         metadata: {
-          address: query,
+          address,
+          ens: ensName ?? undefined,
           network: this.getWalletNetwork(summary),
           value: this.formatWalletValue(summary),
-          change: summary.dayChangePercent,
+          change: summary?.dayChangePercent,
           verified: this.isVerifiedWallet(summary),
-          tags: this.generateWalletTags(query, summary),
-          ens: isValidENS(query) ? query : undefined
+          tags: this.generateWalletTags(query, summary, !!ensName),
+          // ENS metadata
+          ensDescription: ensData?.description?? undefined,
+          ensTwitter: ensData?.twitter?? undefined,
+          ensGithub: ensData?.github?? undefined,
+          ensEmail: ensData?.email?? undefined,
+          ensUrl: ensData?.url?? undefined
         }
       };
 
-      return this.passesWalletFilters(result, filters) ? [result] : [];
+      return [result];
     } catch (error) {
       console.error('Wallet search failed:', error);
-      // Return basic fallback result
+      
+      // Return fallback result
       return [{
-        id: `wallet-${query}`,
-        title: this.formatAddress(query),
-        subtitle: isValidENS(query) ? 'ENS Domain' : 'Ethereum Address',
+        id: `wallet-fallback-${address}`,
+        title: ensName || this.formatAddress(address),
+        subtitle: ensName ? 'ENS Domain' : 'Ethereum Address',
         category: 'wallets',
         icon: <Wallet size={16} />,
         type: 'wallet' as const,
-        url: `/wallets/${query}`,
+        url: `/wallets/${address}`,
         metadata: {
-          address: query,
+          address,
+          ens: ensName ?? undefined,
           network: 'Ethereum',
-          ens: isValidENS(query) ? query : undefined,
           tags: ['wallet', 'ethereum']
         }
       }];
@@ -464,7 +523,7 @@ export class SearchService {
     return tags;
   }
 
-  private generateWalletTags(address: string, summary: any): string[] {
+  private generateWalletTags(address: string, summary: any, p0: boolean): string[] {
     const tags = ['wallet', 'ethereum'];
     if (isValidENS(address)) tags.push('ens');
     if ((summary.totalValue?.positions || 0) > 1e6) tags.push('whale');

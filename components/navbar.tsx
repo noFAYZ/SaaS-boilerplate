@@ -39,6 +39,8 @@ import { useSidebarVisibility } from "@/hooks/useSidebarVisibility";
 import { Chip, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from "@heroui/react";
 import AdvancedSearch from "./UI/AdvancedSearch";
 import { EnhancedSearch } from "./search";
+import ThemeSwitcher from "./shared/theme-switch";
+import { CuidaNotificationBellOutline } from "./icons/icons";
 
 export const Navbar = () => {
   // State management
@@ -300,7 +302,7 @@ export const Navbar = () => {
 
           {/* Search Bar (when not in navbar mode) */}
           {navigationMode !== 'navbar' && (
-            <NavbarItem className="flex-1 max-w-md mx-4">
+            <NavbarItem className="flex-1 max-w-lg mx-2">
               <EnhancedSearch
             placeholder="Search wallets, tokens, NFTs, DeFi protocols..."
           
@@ -327,25 +329,26 @@ export const Navbar = () => {
 
           {/* Theme Switch */}
           <NavbarItem className="hidden sm:flex">
-            <ThemeSwitch />
+          <ThemeSwitcher />
+           
           </NavbarItem>
 
           {/* Desktop User Area */}
           <NavbarItem className="hidden md:flex">
             {user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 p-1 border border-divider rounded-full">
                 {/* Notifications */}
                 <Dropdown placement="bottom-end">
                   <DropdownTrigger>
                     <Button
+                      variant="solid"
                       isIconOnly
-                      variant="light"
                       size="sm"
-                      className="relative text-default-500 hover:text-foreground transition-colors"
+                      className="h-9 w-9 rounded-full  relative"
                       aria-label="Notifications"
                     >
-                      <Bell size={18} />
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-primary rounded-full border-2 border-background"></span>
+                      <CuidaNotificationBellOutline  className=" w-4 h-4 "/>
+            
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu aria-label="Notifications" className="w-80">
@@ -389,29 +392,31 @@ export const Navbar = () => {
                   </DropdownMenu>
                 </Dropdown>
 
+                <span className="text-xs text-default-600 hidden lg:inline-block max-w-[100px] truncate">
+                        {user.user_metadata?.full_name?.split(' ')?.[0] || 'User'}
+                      </span>
+
                 {/* User Menu */}
                 <Dropdown placement="bottom-end">
                   <DropdownTrigger>
                     <Button
                       variant="light"
-                      className="h-8 px-2 gap-2 transition-all hover:scale-105"
-                      startContent={
-                        <Avatar
+                      className="h-9 w-9 rounded-full p-0 "
+                      isIconOnly
+                      size="sm"
+                    
+                    
+                    >
+                      <Avatar
                           size="sm"
                           src={user.user_metadata?.avatar_url}
-                          className="w-6 h-6"
+                          className="w-9 h-9"
                           fallback={
                             <div className="bg-primary text-primary-foreground flex items-center justify-center w-full h-full rounded-full text-xs font-medium">
                               {user.email?.[0]?.toUpperCase() || 'U'}
                             </div>
                           }
                         />
-                      }
-                      endContent={<ChevronDown size={14} className="text-default-500" />}
-                    >
-                      <span className="text-sm text-default-600 hidden lg:inline-block max-w-[100px] truncate">
-                        {user.user_metadata?.full_name?.split(' ')?.[0] || 'User'}
-                      </span>
                     </Button>
                   </DropdownTrigger>
                   <DropdownMenu aria-label="User menu">

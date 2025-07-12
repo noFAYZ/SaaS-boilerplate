@@ -108,12 +108,12 @@ const SearchInput = memo<{
             ${hasError 
               ? 'bg-danger-50 dark:bg-danger-950/20' 
               : isOpen 
-                ? 'bg-content3 shadow-lg' 
+                ? 'bg-default-200 shadow-lg' 
                 : 'hover:shadow-md'
             }
           `,
-          input: "text-sm font-medium placeholder:text-default-400",
-          innerWrapper: "gap-2"
+          input: "text-sm font-medium placeholder:text-default-400 bg-default-200",
+          innerWrapper: "gap-2 "
         }}
         startContent={
           <div className="flex items-center gap-2">
@@ -446,7 +446,7 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
                       color="danger"
                       startContent={<Trash2 size={12} />}
                       onPress={clearHistory}
-                      className="h-5 px-0.5 rounded-md text-[11px] text-danger font-medium"
+                      className="h-5 px-0 rounded-md text-[11px] text-danger font-medium"
                     >
                       Clear
                     </Button>
@@ -496,11 +496,11 @@ const EnhancedSearch: React.FC<EnhancedSearchProps> = memo(({
                   </div>
                 ) : (
                   <div className="p-8 text-center">
-                    <div className="inline-flex items-center justify-center w-12 h-12 bg-default-100 rounded-xl mb-3">
+                    <div className="inline-flex items-center justify-center w-12 h-12 bg-default-200 rounded-2xl mb-3">
                       <Search className="w-6 h-6 text-default-400" />
                     </div>
                     <h3 className="font-semibold text-default-600 mb-1">No results found</h3>
-                    <p className="text-default-400 text-sm mb-3">
+                    <p className="text-default-400 text-sm mb-3 text-pretty">
                       Try searching for tokens, wallet addresses, or ENS names
                     </p>
                     <Button

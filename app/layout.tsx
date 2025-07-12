@@ -50,10 +50,10 @@ export default function RootLayout({
                 <main className="flex-1 w-full  overflow-x-auto">
                
                   {/* Content Container with responsive padding */}
-                  <div className="w-full min-h-[calc(100vh-4rem)]">
-                    <div className=" mx-auto ">
+                  <div className="w-full min-h-[calc(100vh-5rem)]">
+                   
                       {children}
-                    </div>
+                 
                   </div>
                 </main>
               </div>

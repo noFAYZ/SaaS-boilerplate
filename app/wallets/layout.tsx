@@ -30,7 +30,7 @@ export default function Layout({
 
 
     return (
-      <div className=" max-w-7xl mx-auto my-auto ">
+      <div className=" max-w-7xl mx-auto py-10 px-6 ">
                       {children}
                     </div>
          

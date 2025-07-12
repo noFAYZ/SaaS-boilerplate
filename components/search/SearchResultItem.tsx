@@ -45,10 +45,11 @@ import {
   Users,
   Volume2,
   Calendar,
-  MapPin
+  MapPin,
+  ArrowUp
 } from "lucide-react";
 import { SearchResult, SearchCategory } from "@/lib/search/types";
-import { MaterialIconThemeVerified } from "../icons/icons";
+import { BasilWalletOutline, MaterialIconThemeVerified, SolarDollarMinimalisticBoldDuotone, SolarWalletBoldDuotone, StreamlineDollarCoinSolid } from "../icons/icons";
 
 // Enterprise-grade currency formatter with financial precision
 class EnterpriseCurrencyFormatter {
@@ -333,22 +334,22 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
     const category = (result.category as SearchCategory) || 'tokens';
     const configs = {
       tokens: {
-        gradient: 'from-blue-500 via-indigo-500 to-purple-600',
+        gradient: 'from-blue-500/60 via-indigo-500/60 to-purple-600/60 text-white/80',
         bgLight: 'bg-blue-50 border-blue-200',
         bgDark: 'dark:bg-blue-950/20 dark:border-blue-800/30',
-        text: 'text-blue-700 dark:text-blue-300',
-        icon: Coins,
-        badge: 'primary' as const,
+        text: 'text-warning-700 dark:text-warning-300',
+        icon: SolarDollarMinimalisticBoldDuotone,
+        badge: 'bg-warning-100 text-warning-700' as const,
         priority: 4,
         label: 'Token'
       },
       wallets: {
-        gradient: 'from-purple-500 via-pink-500 to-rose-600',
+        gradient: 'from-purple-500/60 via-pink-500/60 to-rose-600/60 text-white/80',
         bgLight: 'bg-purple-50 border-purple-200',
         bgDark: 'dark:bg-purple-950/20 dark:border-purple-800/30',
-        text: 'text-purple-700 dark:text-purple-300',
-        icon: Target,
-        badge: 'secondary' as const,
+        text: 'text-blue-700 dark:text-blue-300',
+        icon: SolarWalletBoldDuotone,
+        badge: 'bg-blue-100 text-blue-700' as const,
         priority: 5,
         label: 'Wallet'
       },
@@ -356,9 +357,9 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
         gradient: 'from-green-500 via-emerald-500 to-teal-600',
         bgLight: 'bg-green-50 border-green-200',
         bgDark: 'dark:bg-green-950/20 dark:border-green-800/30',
-        text: 'text-green-700 dark:text-green-300',
+        text: 'text-lime-700 dark:text-lime-300',
         icon: Award,
-        badge: 'success' as const,
+        badge: 'bg-lime-100 text-lime-700' as const,
         priority: 3,
         label: 'NFT'
       },
@@ -366,9 +367,9 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
         gradient: 'from-orange-500 via-amber-500 to-yellow-600',
         bgLight: 'bg-orange-50 border-orange-200',
         bgDark: 'dark:bg-orange-950/20 dark:border-orange-800/30',
-        text: 'text-orange-700 dark:text-orange-300',
+        text: 'text-danger-700 dark:text-danger-300',
         icon: Zap,
-        badge: 'warning' as const,
+        badge: 'bg-danger-100 text-danger-700' as const,
         priority: 4,
         label: 'DeFi'
       }
@@ -427,7 +428,7 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
   // Get density-based spacing
   const getDensityClasses = () => {
     switch (density) {
-      case 'compact': return 'p-3 gap-2';
+      case 'compact': return 'p-2 gap-2';
       case 'spacious': return 'p-6 gap-4';
       default: return 'p-4 gap-3';
     }
@@ -464,7 +465,7 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
   return (
     <div
   
-      onPress={onSelect}
+      onClick={onSelect}
       className={`
         group relative transition-all duration-75 cursor-pointer w-full
         ${isSelected 
@@ -479,25 +480,33 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
     >
       <div className={getDensityClasses()}>
         {/* Header Section */}
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-2">
           {/* Enhanced Icon with Status Indicators */}
           <div className="relative flex-shrink-0">
+
+
+               
+
+            <div className={`flex w-8 h-8 bg-default-200 rounded-full items-center justify-center text-center ${!imageError ? 'rounded-xl' : 'rounded-full'}`}>
         
               {result.metadata?.logoUrl && !imageError ? (
                 <Avatar 
                   src={result.metadata.logoUrl} 
                   alt={result.title}
                   size="sm" 
-                  className="w-10 h-10" 
+                  className={`w-8 h-8 
+                   
+                    `}
+                  
                   onError={() => setImageError(true)}
                   fallback={<IconComponent size={24} className="text-default-500" />}
                 />
               ) : (
-                <IconComponent size={24} className="drop-shadow-sm" />
+                <IconComponent size={20} className={`drop-shadow-sm w-6 h-6 ${categoryConfig.text}`} />
               )}
               
-             
-          
+             </div>
+        
 
          
    
@@ -506,9 +515,9 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
           {/* Content Section */}
           <div className="flex-1 min-w-0">
             {/* Title and Category */}
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-1 ">
               <h3 className={` flex gap-1 items-center min-w-0
-                font-semibold text-sm leading-tight truncate 
+                font-bold text-[13px] leading-tight truncate 
                 ${isSelected ? 'text-primary-700 dark:text-primary-300' : 'text-foreground'}
               `}>
                 {result.title}
@@ -520,23 +529,18 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
               </h3>
               
         
-            {/*   <Chip
+            {/*  */} <Chip
                   size="sm"
                   variant="flat"
                   color={
                     securityMetrics.riskAssessment === 'low' ? 'success' :
                     securityMetrics.riskAssessment === 'medium' ? 'warning' : 'danger'
                   }
-                  content={
-                    `${securityMetrics.riskAssessment === 'low' ? <Shield size={10} /> :
-                    securityMetrics.riskAssessment === 'medium' ? <Info size={10} /> :
-                    <AlertTriangle size={10} />}`
-                  }
-               
+                
                   className="text-[10px] rounded-md h-4 font-medium"
                 >
-              
-                </Chip> */}
+              {securityMetrics.riskAssessment}
+                </Chip> 
             </div>
 
             {/* Subtitle and Metadata */}
@@ -548,8 +552,8 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
               <Chip
                 size="sm"
                 variant="flat"
-                color={"warning"}
-                className="text-[10px] font-semibold uppercase  rounded-md h-4 tracking-wide shrink-0"
+                
+                className={`text-[10px] font-semibold uppercase  rounded-md h-4 tracking-wide shrink-0  ${categoryConfig.badge}`}
               >
                 {categoryConfig.label}
               </Chip>
@@ -557,19 +561,19 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
 
 
                 {result.metadata?.network && (
-                  <div className="flex items-center gap-1.5 px-2 py-1  rounded-md">
+                  <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] rounded-md">
                     <Globe size={10} />
                     <span className="font-medium">{result.metadata.network}</span>
                   </div>
                 )}
                 
-                {result.metadata?.symbol && (
+            {/*     {result.metadata?.symbol && (
                   <div className="flex items-center gap-1.5 px-2 py-1  rounded-md">
                     <Coins size={10} />
                     <code className="font-mono font-semibold">{result.metadata.symbol}</code>
                   </div>
                 )}
-
+ */}
              
               </div>
             </div>
@@ -579,8 +583,8 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
           <div className="flex flex-col items-end gap-2 shrink-0 min-w-[120px]">
             {/* Primary Value */}
             {showBalance && result.metadata?.value && (
-              <div className="text-right">
-                <div className="font-bold text-sm text-foreground/90 leading-tight">
+              <div className="text-right flex flex-col">
+                <div className="font-bold text-[13px] text-foreground/90 leading-tight">
                   {privacyMode 
                     ? '••••••' 
                     : EnterpriseCurrencyFormatter.formatPrice(
@@ -593,18 +597,14 @@ export const SearchResultItem: React.FC<SearchResultItemProps> = memo(({
                 {/* Change indicator with enhanced styling */}
                 {!privacyMode && changeData && !changeData.isNeutral && (
                   <div className={`
-                    flex items-center justify-end gap-1.5 mt-1 px-2 py-1 rounded-md text-sm font-semibold
+                    flex items-center justify-end gap-1.5 mt-1 px-2 py-1 w-fit rounded-lg text-[11px] font-semibold text-end
                     ${changeData.isPositive 
                       ? 'bg-success-100 text-success-700 dark:bg-success-950/30 dark:text-success-400' 
                       : 'bg-danger-100 text-danger-700 dark:bg-danger-950/30 dark:text-danger-400'
                     }
-                    ${changeData.magnitude === 'extreme' ? 'ring-2 ring-current ring-opacity-20' : ''}
+                
                   `}>
-                    {changeData.isPositive ? (
-                      <TrendingUp size={12} />
-                    ) : (
-                      <TrendingDown size={12} />
-                    )}
+                
                     <span>{changeData.formatted}</span>
                   </div>
                 )}
