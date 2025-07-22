@@ -12,6 +12,12 @@ import { GithubIcon, LogoMappr } from "@/components/icons";
 export default function Home() {
   return (
     <section className="flex flex-col items-center justify-center gap-8 py-8 md:py-10">
+          <div className="absolute inset-0 -z-10">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]" />
+      <div className="absolute left-0 right-0 top-0 -z-10 m-auto h-[310px] w-[310px] rounded-full bg-orange-500 opacity-20 blur-[100px]" />
+      <div className="absolute right-0 top-1/4 -z-10 h-[310px] w-[310px] rounded-full bg-pink-500 opacity-20 blur-[100px]" />
+      <div className="absolute bottom-1/4 left-0 -z-10 h-[310px] w-[310px] rounded-full bg-orange-500 opacity-20 blur-[100px]" />
+    </div>
       <div className="inline-block max-w-xl text-center justify-center">
         <div className="mb-2">
           <span className="inline-block px-3 py-1 mb-4 text-xs font-medium rounded-full bg-primary-500/10 text-primary-500">

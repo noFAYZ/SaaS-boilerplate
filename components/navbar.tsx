@@ -207,7 +207,7 @@ export const Navbar = () => {
       aria-label="Search"
       className={clsx("transition-all duration-75", className)}
       classNames={{
-        inputWrapper: "bg-default-200/70 hover:bg-default-100 backdrop-blur-md border-0",
+        inputWrapper: " backdrop-blur-md border-0",
         input: "text-sm placeholder:text-default-500",
       }}
       placeholder={placeholder}
@@ -232,12 +232,10 @@ export const Navbar = () => {
       <HeroUINavbar 
         maxWidth="full"
         className={clsx(
-          " backdrop-blur-md transition-all duration-75 border-b border-divider",
+          " shadow-none transition-all duration-75 ",
           isScrolled && "shadow-sm "
         )}
-        classNames={{
-          wrapper: "max-w-7xl",
-        }}
+    
         height="4rem"
       >
         {/* Left Content */}
@@ -334,7 +332,7 @@ export const Navbar = () => {
           </NavbarItem>
 
           {/* Desktop User Area */}
-          <NavbarItem className="hidden md:flex">
+          <NavbarItem className="flex">
             {user ? (
               <div className="flex items-center gap-1 p-1 border border-divider rounded-full">
                 {/* Notifications */}
@@ -392,7 +390,7 @@ export const Navbar = () => {
                   </DropdownMenu>
                 </Dropdown>
 
-                <span className="text-xs text-default-600 hidden lg:inline-block max-w-[100px] truncate">
+                <span className="text-xs text-default-600 inline-block max-w-[100px] truncate">
                         {user.user_metadata?.full_name?.split(' ')?.[0] || 'User'}
                       </span>
 
@@ -471,204 +469,13 @@ export const Navbar = () => {
             )}
           </NavbarItem>
 
-          {/* Mobile Actions */}
-          <NavbarItem className="md:hidden flex">
-            <div className="flex items-center gap-1">
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={handleSearchFocus}
-                className="text-default-500 hover:text-foreground"
-                aria-label="Search"
-              >
-                <Search size={18} />
-              </Button>
-              <ThemeSwitch />
-              <Button
-                isIconOnly
-                variant="light"
-                size="sm"
-                onPress={toggleMobileMenu}
-                className="text-default-500 hover:text-foreground"
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-              >
-                <Menu size={18} />
-              </Button>
-            </div>
-          </NavbarItem>
+       
         </NavbarContent>
       </HeroUINavbar>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div 
-          ref={mobileMenuRef}
-          className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-md md:hidden"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile navigation menu"
-        >
-          {/* Mobile Menu Header */}
-          <div className="flex items-center justify-between p-4 border-b border-divider">
-            <NextLink href="/" className="flex items-center gap-3" onClick={closeMobileMenu}>
-              <Logo size={32} className="text-primary" />
-              <span className="font-bold text-xl">MoneyMappr</span>
-            </NextLink>
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onPress={closeMobileMenu}
-              className="text-default-500"
-              aria-label="Close menu"
-            >
-              <X size={20} />
-            </Button>
-          </div>
+     
 
-          {/* Mobile Search */}
-          <div className="p-4 border-b border-divider">
-            <SearchInput 
-              className="w-full" 
-              placeholder="Search..."
-              variant="compact"
-            />
-          </div>
-
-          {/* Mobile Navigation Content */}
-          <div className="flex-1 overflow-y-auto">
-            {/* Categories Tabs */}
-            <div className="flex border-b border-divider overflow-x-auto p-2 gap-1">
-              {navigationItems.map((category) => (
-                <Button
-                  key={category.title}
-                  variant={activeCategory === category.title ? "solid" : "light"}
-                  color={activeCategory === category.title ? "primary" : "default"}
-                  size="sm"
-                  radius="full"
-                  className="whitespace-nowrap flex-shrink-0"
-                  onPress={() => handleCategoryChange(category.title)}
-                >
-                  {category.title}
-                </Button>
-              ))}
-            </div>
-            
-            {/* Navigation Items */}
-            <div className="p-4 space-y-1">
-              {activeNavigationItems.map((item) => (
-                <NextLink 
-                  key={item.href} 
-                  href={item.href}
-                  onClick={closeMobileMenu}
-                  className={clsx(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    pathname === item.href 
-                      ? "bg-primary/10 text-primary font-medium" 
-                      : "hover:bg-default-100"
-                  )}
-                >
-                  <div className={clsx(
-                    "flex-shrink-0",
-                    pathname === item.href ? "text-primary" : "text-default-500"
-                  )}>
-                    {item.icon}
-                  </div>
-                  <span className="text-sm font-medium flex-1">{item.label}</span>
-                  {item.badge && (
-                    <Badge color="primary" size="sm" variant="flat">
-                      {item.badge.text}
-                    </Badge>
-                  )}
-                </NextLink>
-              ))}
-            </div>
-          </div>
-
-          {/* Mobile User Section */}
-          <div className="p-4 border-t border-divider">
-            {user ? (
-              <>
-                <div className="flex items-center gap-3 mb-4">
-                  <Avatar
-                    src={user.user_metadata?.avatar_url}
-                    size="sm"
-                    fallback={
-                      <div className="bg-primary text-primary-foreground flex items-center justify-center w-full h-full rounded-full text-sm font-medium">
-                        {user.email?.[0]?.toUpperCase() || 'U'}
-                      </div>
-                    }
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {user.user_metadata?.full_name || 'User'}
-                    </p>
-                    <p className="text-xs text-default-500 truncate">
-                      {user.email}
-                    </p>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  {userMenuItems.map((item) => (
-                    <NextLink 
-                      key={item.href} 
-                      href={item.href}
-                      onClick={closeMobileMenu}
-                      className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-default-100 transition-colors"
-                    >
-                      <div className="text-default-500 flex-shrink-0">
-                        {item.icon}
-                      </div>
-                      <span className="text-sm font-medium">{item.label}</span>
-                    </NextLink>
-                  ))}
-                </div>
-              </>
-            ) : (
-              <AuthButtons isMobile />
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Search Overlay */}
-      {showFullSearch && (
-        <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-md p-4 md:hidden">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold">Search</h3>
-            <Button
-              isIconOnly
-              variant="light"
-              size="sm"
-              onPress={() => setShowFullSearch(false)}
-              aria-label="Close search"
-            >
-              <X size={18} />
-            </Button>
-          </div>
-          <SearchInput className="w-full mb-6" />
-          <div>
-            <p className="text-xs text-default-500 mb-3 font-medium">Recent Searches</p>
-            <div className="space-y-2">
-              {[
-                'Portfolio analytics', 
-                'Ethereum wallet', 
-                'DeFi positions'
-              ].map((item) => (
-                <button
-                  key={item}
-                  className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-default-100 transition-colors w-full text-left"
-                  onClick={() => setShowFullSearch(false)}
-                >
-                  <Search size={14} className="text-default-400 flex-shrink-0" />
-                  <span className="text-sm">{item}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+ 
     </>
   );
 };

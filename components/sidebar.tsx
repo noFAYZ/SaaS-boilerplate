@@ -3,442 +3,494 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { Button } from "@heroui/button";
-import { Divider } from "@heroui/divider";
 import NextLink from "next/link";
 import clsx from "clsx";
 import { 
-  ChevronRightIcon,
+  Menu,
+  X,
+  ChevronRight,
+  ChevronDown,
+  Zap,
+  Sparkles,
+  Settings,
+  HelpCircle,
+  LogOut,
+  Palette,
 } from "lucide-react";
 
-import { Logo, LogoMappr } from "@/components/icons";
+import { LogoMappr } from "@/components/icons";
 import { 
   CuidaLogoutOutline, 
   HugeiconsSettings05, 
-  HugeiconsSidebarLeft01, 
-  HugeiconsSidebarRight01, 
+  HugeiconsSidebarLeft01,
   TablerHelpSquareRounded, 
+  RadixIconsDashboard,
+  SolarPieChartBold,
+  SolarWalletOutline,
+  HugeiconsAnalyticsUp,
+  BasilWalletOutline,
+  HugeiconsSidebarRight01
 } from "./icons/icons";
 import { useNavigation } from "@/contexts/NavigationContext";
-import { navigationItems } from "@/config/navigation";
+
+interface SubMenuItem {
+  label: string;
+  href: string;
+  badge?: string;
+  icon?: React.ReactNode;
+}
+
+interface MenuItem {
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  badge?: string;
+  submenu?: SubMenuItem[];
+  accent?: string;
+}
 
 interface SidebarProps {
   className?: string;
 }
 
-// Breakpoint constants
-const MOBILE_BREAKPOINT = 768;
-const TABLET_BREAKPOINT = 1024;
+// Enhanced navigation with modern design
+const navigationItems: MenuItem[] = [
+  {
+    label: "Dashboard",
+    href: "/",
+    icon: <RadixIconsDashboard className="w-5 h-5" />,
+    accent: "from-blue-500 to-cyan-500",
+  },
+  {
+    label: "Wallets",
+    href: "/wallets",
+    icon: <BasilWalletOutline className="w-5 h-5" />,
+    badge: "3",
+    accent: "from-emerald-500 to-teal-500",
+    submenu: [
+      { label: "All Wallets", href: "/wallets", icon: <SolarWalletOutline className="w-4 h-4" /> },
+      { label: "Add Wallet", href: "/wallets/add", icon: <Zap className="w-4 h-4" /> },
+      { label: "Import Wallet", href: "/wallets/import", icon: <Sparkles className="w-4 h-4" /> },
+      { label: "Hardware", href: "/wallets/hardware", icon: <Settings className="w-4 h-4" /> },
+    ]
+  },
+  {
+    label: "Portfolios",
+    href: "/portfolios",
+    icon: <SolarPieChartBold className="w-5 h-5" />,
+    accent: "from-purple-500 to-pink-500",
+    submenu: [
+      { label: "Overview", href: "/portfolios", icon: <RadixIconsDashboard className="w-4 h-4" /> },
+      { label: "Performance", href: "/portfolios/performance", icon: <HugeiconsAnalyticsUp className="w-4 h-4" /> },
+      { label: "Allocation", href: "/portfolios/allocation", icon: <SolarPieChartBold className="w-4 h-4" /> },
+      { label: "Rebalance", href: "/portfolios/rebalance", icon: <Palette className="w-4 h-4" /> },
+    ]
+  },
+  {
+    label: "Accounts",
+    href: "/accounts",
+    icon: <SolarWalletOutline className="w-5 h-5" />,
+    accent: "from-orange-500 to-red-500",
+    submenu: [
+      { label: "All Accounts", href: "/accounts", icon: <SolarWalletOutline className="w-4 h-4" /> },
+      { label: "Exchanges", href: "/accounts/exchanges", icon: <Zap className="w-4 h-4" /> },
+      { label: "Banks", href: "/accounts/banks", icon: <Settings className="w-4 h-4" /> },
+      { label: "DeFi", href: "/accounts/defi", icon: <Sparkles className="w-4 h-4" /> },
+    ]
+  },
+  {
+    label: "Analytics",
+    href: "/analytics",
+    icon: <HugeiconsAnalyticsUp className="w-5 h-5" />,
+    badge: "New",
+    accent: "from-indigo-500 to-purple-500",
+    submenu: [
+      { label: "Overview", href: "/analytics", icon: <RadixIconsDashboard className="w-4 h-4" /> },
+      { label: "P&L Reports", href: "/analytics/pnl", icon: <HugeiconsAnalyticsUp className="w-4 h-4" /> },
+      { label: "Tax Reports", href: "/analytics/tax", icon: <Settings className="w-4 h-4" /> },
+      { label: "Custom", href: "/analytics/custom", icon: <Palette className="w-4 h-4" /> },
+    ]
+  },
+];
+
+const userMenuItems = [
+  { label: "Settings", href: "/settings", icon: <Settings className="w-4 h-4" /> },
+  { label: "Help", href: "/help", icon: <HelpCircle className="w-4 h-4" /> },
+  { label: "Logout", href: "/logout", icon: <LogOut className="w-4 h-4" /> },
+];
 
 export const Sidebar = ({ className }: SidebarProps) => {
-  const [collapsed, setCollapsed] = useState(true);
+  const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [open, setOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [expandedMenus, setExpandedMenus] = useState<Set<string>>(new Set());
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
-  const pathname = usePathname();
+  
   const sidebarRef = useRef<HTMLElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-
-  // Get navigation context
+  const pathname = usePathname();
   const { navigationMode, disabledSidebarPaths } = useNavigation();
   
-  // Check if sidebar should be hidden on current path
   const shouldHideSidebar = disabledSidebarPaths.includes(pathname) || navigationMode === 'navbar';
 
-  // User menu items
-  const userMenuItems = [
-    {
-      label: "Settings",
-      href: "/settings",
-      icon: <HugeiconsSettings05 className="w-5 h-5" />,
-    },
-    {
-      label: "Help & Support",
-      href: "/help",
-      icon: <TablerHelpSquareRounded className="w-5 h-5" />,
-    },
-    {
-      label: "Logout",
-      href: "/logout",
-      icon: <CuidaLogoutOutline className="w-5 h-5 text-destructive" />,
-    },
-  ];
-
-  // Memoized resize handler
+  // Handle resize with debouncing
   const handleResize = useCallback(() => {
-    const width = window.innerWidth;
-    const mobile = width < MOBILE_BREAKPOINT;
-    const tablet = width >= MOBILE_BREAKPOINT && width < TABLET_BREAKPOINT;
-    
+    const mobile = window.innerWidth < 768;
     setIsMobile(mobile);
-    
-    // Auto-collapse on tablet
-    if (tablet && !collapsed) {
-      setCollapsed(true);
-    }
-    
-    // Close mobile menu when resizing to desktop
-    if (!mobile && open) {
-      setOpen(false);
-    }
-  }, [collapsed, open]);
+    if (!mobile && mobileOpen) setMobileOpen(false);
+  }, [mobileOpen]);
 
-  // Handle screen resize and mobile detection
   useEffect(() => {
     setMounted(true);
     handleResize();
-
-    // Debounced resize handler
-    let timeoutId: NodeJS.Timeout;
+    
     const debouncedResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleResize, 150);
+      clearTimeout(window.resizeTimeout);
+      window.resizeTimeout = setTimeout(handleResize, 150);
     };
 
     window.addEventListener("resize", debouncedResize);
     return () => {
       window.removeEventListener("resize", debouncedResize);
-      clearTimeout(timeoutId);
+      clearTimeout(window.resizeTimeout);
     };
   }, [handleResize]);
 
-  // Handle click outside for mobile with proper event handling
+  // Handle mobile overlay and keyboard
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!isMobile || !open) return;
-      
-      const target = event.target as Node;
-      const sidebar = sidebarRef.current;
-      const overlay = overlayRef.current;
-      
-      if (sidebar && !sidebar.contains(target) && overlay && overlay.contains(target)) {
-        setOpen(false);
+    if (!isMobile || !mobileOpen) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(e.target as Node)) {
+        setMobileOpen(false);
       }
     };
 
-    if (isMobile && open) {
-      document.addEventListener("mousedown", handleClickOutside);
-      // Prevent body scroll when mobile menu is open
-      document.body.style.overflow = 'hidden';
-      // Add padding to prevent layout shift
-      document.body.style.paddingRight = '0px';
-    } else {
-      document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
-    }
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMobileOpen(false);
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+    document.body.style.overflow = 'hidden';
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
       document.body.style.overflow = '';
-      document.body.style.paddingRight = '';
     };
-  }, [isMobile, open]);
+  }, [isMobile, mobileOpen]);
 
-  // Handle escape key for mobile menu
-  useEffect(() => {
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isMobile && open) {
-        setOpen(false);
-      }
-    };
-
-    if (isMobile && open) {
-      document.addEventListener('keydown', handleEscape);
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isMobile, open]);
-
-  // Toggle sidebar with proper state management
-  const toggleSidebar = useCallback(() => {
+  const toggleSidebar = () => {
     if (isMobile) {
-      setOpen(prev => !prev);
+      setMobileOpen(!mobileOpen);
     } else {
-      setCollapsed(prev => !prev);
+      setCollapsed(!collapsed);
+      if (!collapsed) setExpandedMenus(new Set());
     }
-  }, [isMobile]);
+  };
 
-  // Handle navigation item click
-  const handleNavItemClick = useCallback(() => {
-    if (isMobile && open) {
-      setOpen(false);
-    }
-    // Clear any hover states
+  const handleNavClick = () => {
+    if (isMobile) setMobileOpen(false);
     setHoveredItem(null);
-  }, [isMobile, open]);
+  };
 
-  // Handle mouse events for tooltips
-  const handleMouseEnter = useCallback((href: string) => {
-    if (collapsed && !isMobile) {
-      setHoveredItem(href);
+  const toggleSubmenu = (itemLabel: string) => {
+    const newExpanded = new Set(expandedMenus);
+    if (newExpanded.has(itemLabel)) {
+      newExpanded.delete(itemLabel);
+    } else {
+      newExpanded.add(itemLabel);
     }
-  }, [collapsed, isMobile]);
+    setExpandedMenus(newExpanded);
+  };
 
-  const handleMouseLeave = useCallback(() => {
-    setHoveredItem(null);
-  }, []);
+  const isSubmenuActive = (submenu: SubMenuItem[]) => {
+    return submenu.some(item => pathname === item.href || pathname.startsWith(item.href + '/'));
+  };
 
-  // Don't render on server or if sidebar should be hidden
-  if (!mounted || shouldHideSidebar) {
-    return null;
-  }
+  const isItemActive = (item: MenuItem) => {
+    if (pathname === item.href) return true;
+    if (item.submenu) return isSubmenuActive(item.submenu);
+    return false;
+  };
+
+  if (!mounted || shouldHideSidebar) return null;
+
+  const isExpanded = (!collapsed && !isMobile) || (isMobile && mobileOpen);
 
   return (
     <>
-      {/* Mobile overlay */}
-      {isMobile && open && (
-        <div 
-          ref={overlayRef}
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
-          role="button"
-          aria-label="Close sidebar"
-          tabIndex={0}
-          onKeyDown={(e) => e.key === 'Enter' && setOpen(false)}
-        />
+      {/* Glass morphism overlay for mobile */}
+      {isMobile && mobileOpen && (
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-md z-40 md:hidden" />
       )}
 
-      {/* Mobile toggle button */}
+      {/* Floating mobile toggle with micro-animation */}
       {isMobile && (
         <Button
           isIconOnly
-          variant="ghost"
-          radius="full"
+          variant="flat"
           size="sm"
-          className="fixed top-4 left-4 z-50 shadow-md bg-background/80 dark:bg-background/80 backdrop-blur-md border border-divider md:hidden"
+          className="fixed top-4 left-4 z-50 shadow-2xl bg-white/90 dark:bg-black/90 backdrop-blur-xl border border-white/20 dark:border-black/20 md:hidden hover:scale-105 transition-all duration-200"
           onPress={toggleSidebar}
-          aria-label={open ? "Close sidebar" : "Open sidebar"}
         >
-          <ChevronRightIcon size={18} className={clsx("transition-transform duration-75", open && "rotate-180")} />
+          {mobileOpen ? <X size={18} /> : <Menu size={18} />}
         </Button>
       )}
 
-      {/* Main Sidebar */}
+      {/* Premium Sidebar with glass morphism */}
       <aside
         ref={sidebarRef}
         className={clsx(
-          "fixed md:sticky top-0 flex flex-col h-screen bg-background dark:bg-background border-r border-divider transition-all duration-75 ease-in-out z-50",
+          "fixed md:sticky top-0 h-screen bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-r border-divider dark:border-gray-800/50 z-50 transition-all duration-100 ease-out flex flex-col shadow-2xl md:shadow-none",
+          collapsed && !isMobile ? "w-16" : "w-56",
           {
-            // Width classes
-            "w-56": (!collapsed && !isMobile) || (isMobile && open),
-            "w-16": collapsed && !isMobile,
-            // Position classes for mobile
-            "-translate-x-full md:translate-x-0": isMobile && !open,
-            "translate-x-0": !isMobile || open,
-            // Shadow
-            "shadow-lg md:shadow-none": isMobile,
+            "-translate-x-full md:translate-x-0": isMobile && !mobileOpen,
+            "translate-x-0": !isMobile || mobileOpen,
           },
           className
         )}
-        role="navigation"
-        aria-label="Main navigation"
       >
-        {/* Header with glowing effect */}
-        <div className={clsx(
-          "flex items-center h-16 px-4 relative border-b border-divider z-40",
-          collapsed && !isMobile ? "justify-center" : "justify-between"
+        {/* Premium header with gradient accent */}
+        <header className={clsx(
+          "relative flex items-center h-16 transition-all duration-100 gap-4",
+          collapsed && !isMobile ? "px-3 justify-center" : "px-6 justify-between"
         )}>
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-transparent" />
+          {/* Gradient backdrop */}
+          <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-pink-500/10" />
           
-          {(!collapsed || isMobile) && (
-            <NextLink 
-              href="/" 
-              className="flex items-center gap-2 z-10 group" 
-              onClick={handleNavItemClick}
-              aria-label="Go to homepage"
-            >
-              <div className="relative glow-primary">
-                <LogoMappr  className="h-8 w-8" />
+          {isExpanded && (
+            <NextLink href="/" className="flex items-center gap-3 group relative z-10" onClick={handleNavClick}>
+              <div className="relative">
+              
+                <LogoMappr className="h-8 w-8 text-white relative z-10" />
               </div>
-              <span className="font-bold text-lg tracking-tight">MoneyMappr</span>
+              <span className="font-bold text-md bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+                MoneyMappr
+              </span>
             </NextLink>
           )}
           
           {collapsed && !isMobile && (
-            <NextLink 
-              href="/" 
-              className="flex items-center justify-center z-10 group"
-              onClick={handleNavItemClick}
-              aria-label="Go to homepage"
-            >
-              <div className="relative glow-primary">
-                <LogoMappr   />
+            <NextLink href="/" className="relative z-10 group" onClick={handleNavClick}>
+              <div className="relative">
+              
+                <LogoMappr className="h-9 w-9 text-white relative z-10" />
               </div>
             </NextLink>
           )}
           
-          {!collapsed && !isMobile && (
+          {!isMobile && !collapsed && (
             <Button
               isIconOnly
               variant="light"
-              radius="md"
               size="sm"
-              className="text-default-500 p-0 z-10 hover:bg-default-100"
+              className="text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-black/50 transition-all duration-200 relative z-10"
               onPress={toggleSidebar}
-              aria-label="Collapse sidebar"
             >
               <HugeiconsSidebarLeft01 className="w-5 h-5" />
             </Button>
           )}
-        </div>
+        </header>
 
-        {/* Navigation */}
-        <div className="flex-1 py-4 px-2 space-y-6 z-50  scrollbar-thin scrollbar-thumb-default-300 scrollbar-track-transparent">
-          {/* Collapse button for collapsed mode */}
-          {(collapsed && !isMobile) && (
-            <div className="flex justify-center px-1">
-              <Button
-                isIconOnly
-                variant="light"
-                radius="md"
-                size="sm"
-                className="text-default-500 p-0 hover:bg-default-100"
-                onPress={toggleSidebar}
-                aria-label="Expand sidebar"
-              >
-                <HugeiconsSidebarRight01 className="w-5 h-5" />
-              </Button>
-            </div>
-          )}
+        {/* Elegant collapse button for collapsed state */}
+        {!isMobile && collapsed && (
+          <div className="flex justify-center my-4">
+            <Button
+              isIconOnly
+              variant="light"
+              size="sm"
+              className="text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-black/50 transition-all duration-200 hover:scale-105"
+              onPress={toggleSidebar}
+            >
+              <HugeiconsSidebarRight01 className="w-5 h-5" />
+            </Button>
+          </div>
+        )}
 
-          {/* Navigation items by category */}
-          {navigationItems.map((category, categoryIndex) => (
-            <nav key={categoryIndex} className="w-full" role="navigation" aria-labelledby={`category-${categoryIndex}`}>
-              {/* Category title - only show when expanded */}
-              {(!collapsed || isMobile) && (
-                <h3 
-                  id={`category-${categoryIndex}`}
-                  className="text-xs uppercase text-default-400 dark:text-default-500 font-medium tracking-wider mb-2"
-                >
-                  {category.title}
-                </h3>
-              )}
+        {/* Premium Navigation */}
+        <div className="flex-1  px-2 py-6 space-y-2 scrollbar-none">
+          <nav className="space-y-1">
+            {navigationItems.map((item) => {
+              const isActive = isItemActive(item);
+              const hasSubmenu = item.submenu && item.submenu.length > 0;
+              const isExpanded = expandedMenus.has(item.label);
               
-              {/* Category items */}
-              <div className="space-y-1" role="group" aria-labelledby={`category-${categoryIndex}`}>
-                {category.items.map((item) => (
-                  <div 
-                    key={item.href}
-                    onMouseEnter={() => handleMouseEnter(item.href)}
-                    onMouseLeave={handleMouseLeave}
+              return (
+                <div key={item.label} className="group">
+                  {/* Tooltip for collapsed mode */}
+                  <div
                     className="relative"
+                    onMouseEnter={() => collapsed && !isMobile && setHoveredItem(item.label)}
+                    onMouseLeave={() => setHoveredItem(null)}
                   >
-                    {/* Tooltip for collapsed mode */}
-                    {(collapsed && !isMobile && hoveredItem === item.href) && (
-                      <div 
-                        className="absolute left-14 top-1/2 -translate-y-1/2 z-50 bg-background dark:bg-background text-foreground  px-2 py-1 rounded-lg shadow-lg text-[11px] font-semibold whitespace-nowrap border border-divider"
-                        role="tooltip"
-                        aria-hidden="false"
-                      >
-                        {item.label}
-                        {item.badge && (
-                          <span className="ml-2 inline-block px-1  text-[10px] rounded-lg bg-primary-500 text-white">
-                            {item.badge.text}
-                          </span>
+                    {collapsed && !isMobile && hoveredItem === item.label && (
+                      <div className="absolute left-full top-0 ml-3 z-50 px-4 py-3 bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-white/20 dark:border-gray-800/50 shadow-2xl rounded-xl text-sm font-medium whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          {item.label}
+                          {item.badge && (
+                            <span className="px-2 py-1 text-xs bg-gradient-to-r from-orange-500 to-red-500 text-white rounded-full">
+                              {item.badge}
+                            </span>
+                          )}
+                        </div>
+                        {item.submenu && (
+                          <div className="mt-3 pt-3 border-t border-gray-200/50 dark:border-gray-700/50 space-y-2">
+                            {item.submenu.map((subItem) => (
+                              <div key={subItem.href} className="text-xs text-gray-600 dark:text-gray-400 flex items-center gap-2">
+                                {subItem.icon}
+                                {subItem.label}
+                              </div>
+                            ))}
+                          </div>
                         )}
-                        {/* Tooltip arrow */}
-                        <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-background" />
+                        <div className="absolute right-full top-4 border-8 border-transparent border-r-white/95 dark:border-r-black/95" />
                       </div>
                     )}
                     
                     <Button
-                      href={item.href}
-                      as={NextLink}
-                      variant={pathname === item.href ? "flat" : "light"}
-                      color={pathname === item.href ? "primary" : "default"}
-                      radius="lg"
+                      href={!hasSubmenu ? item.href : undefined}
+                      as={!hasSubmenu ? NextLink : "button"}
+                      variant="light"
                       size="sm"
                       className={clsx(
-                        "w-full text-sm flex items-center ",
-                        collapsed && !isMobile ? "px-0 justify-center min-w-11 min-h-11" : "px-2 justify-start min-w-11 min-h-11",
-                        pathname === item.href ? "font-medium bg-gradient-to-br from-orange-500/70 to-pink-500/70 text-white" : "hover:bg-default-100",
-                        
+                        "w-full h-10 text-sm font-medium transition-all duration-100 ",
+                        collapsed && !isMobile ? "px-0 justify-center min-w-12" : "px-4 justify-start",
+                        isActive 
+                          ? ` bg-default-100 text-gray-800 dark:text-gray-400` 
+                          : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/50 dark:hover:bg-white/10"
                       )}
-                      onPress={handleNavItemClick}
-                      aria-current={pathname === item.href ? "page" : undefined}
+                      onPress={() => {
+                        if (hasSubmenu && !collapsed) {
+                          toggleSubmenu(item.label);
+                        } else if (!hasSubmenu) {
+                          handleNavClick();
+                        }
+                      }}
                       startContent={
                         <div className={clsx(
-                          "flex items-center justify-center transition-colors shrink-0",
-                          pathname === item.href && "text-white"
+                          "flex items-center justify-center shrink-0 transition-all duration-100",
+                          isActive ? " " : "text-gray-500 dark:text-gray-400"
                         )}>
                           {item.icon}
                         </div>
                       }
                       endContent={
-                        (!collapsed || isMobile) && item.badge && (
-                          <span className="ml-auto inline-block px-1.5 py-0.5 text-xs rounded-full bg-primary-500 text-white shrink-0">
-                            {item.badge.text}
-                          </span>
+                        !collapsed && (
+                          <div className="flex items-center gap-2 ml-auto">
+                            {item.badge && (
+                              <span className="px-2 h-5  rounded-md text-[10px] text-center items-center bg-gradient-to-r from-orange-500 to-pink-500 text-white">
+                                {item.badge}
+                              </span>
+                            )}
+                            {hasSubmenu && (
+                              <ChevronDown 
+                                size={16} 
+                                className={clsx(
+                                  "transition-transform duration-100",
+                                  isExpanded ? "rotate-180" : "",
+                                  isActive ? "" : "text-gray-400"
+                                )} 
+                              />
+                            )}
+                          </div>
                         )
                       }
                     >
-                      {(!collapsed || isMobile) && (
-                        <span className="truncate">{item.label}</span>
+                      {!collapsed && (
+                        <span className="truncate text-left text-sm flex-1 font-medium">
+                          {item.label}
+                        </span>
                       )}
                     </Button>
                   </div>
-                ))}
-              </div>
-            </nav>
-          ))}
-        </div>
 
-        {/* User section with modern design */}
-        <div className="mt-auto pt-4 border-t border-divider">
-          <div className={clsx(
-            "p-2",
-            collapsed && !isMobile ? "items-center justify-center" : "items-start"
-          )}>
-            {/* User menu items */}
-            <nav className="space-y-1" role="navigation" aria-label="User menu">
-              {userMenuItems.map((item) => (
-                <div 
-                  key={item.href}
-                  onMouseEnter={() => handleMouseEnter(item.href)}
-                  onMouseLeave={handleMouseLeave}
-                  className="relative"
-                >
-                  {/* Tooltip for collapsed mode */}
-                  {(collapsed && !isMobile && hoveredItem === item.href) && (
-                    <div 
-                      className="absolute left-14 top-1/2 -translate-y-1/2 z-50 bg-background dark:bg-background text-foreground px-3 py-2 rounded-md shadow-lg text-xs whitespace-nowrap border border-divider"
-                      role="tooltip"
-                    >
-                      {item.label}
-                      {/* Tooltip arrow */}
-                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-background" />
+                  {/* Premium Submenu */}
+                  {hasSubmenu && !collapsed && isExpanded && (
+                    <div className="ml-8 mt-2 space-y-1 relative">
+                      <div className="absolute left-0 top-0 bottom-0 w-px bg-gradient-to-b from-gray-300 to-transparent dark:from-gray-600" />
+                      {item.submenu!.map((subItem) => (
+                        <Button
+                          key={subItem.href}
+                          href={subItem.href}
+                          as={NextLink}
+                          variant="light"
+                          size="sm"
+                          className={clsx(
+                            "w-full h-8 justify-start text-xs font-medium transition-all duration-100 hover:scale-[1.02] pl-4",
+                            pathname === subItem.href
+                              ? " text-orange-700 dark:text-orange-500"
+                              : "text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/5"
+                          )}
+                          onPress={handleNavClick}
+                          startContent={
+                            <div className="flex items-center justify-center shrink-0">
+                              {subItem.icon}
+                            </div>
+                          }
+                          endContent={
+                            subItem.badge && (
+                              <span className="px-2 py-0.5 text-[10px] bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                                {subItem.badge}
+                              </span>
+                            )
+                          }
+                        >
+                          <span className="truncate text-xs">{subItem.label}</span>
+                        </Button>
+                      ))}
                     </div>
                   )}
-                  
-                  <Button
-                    href={item.href}
-                    as={NextLink}
-                    variant="light"
-                    color="default"
-                    radius="lg"
-                    size="sm"
-                    className={clsx(
-                      "w-full text-xs font-semibold transition-all duration-200 min-h-10", 
-                      collapsed && !isMobile ? "px-1 justify-center" : "px-4 justify-start",
-                      "hover:bg-default-100 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-                    )}
-                    onPress={handleNavItemClick}
-                    startContent={
-                      <div className="shrink-0">
-                        {item.icon}
-                      </div>
-                    }
-                  >
-                    {(!collapsed || isMobile) && (
-                      <span className="truncate">{item.label}</span>
-                    )}
-                  </Button>
                 </div>
-              ))}
-            </nav>
-          </div>
+              );
+            })}
+          </nav>
         </div>
+
+        {/* Premium User Section */}
+        <footer className="border-t border-white/20 dark:border-gray-800/50 p-3">
+          <nav className="space-y-1">
+            {userMenuItems.map((item) => (
+              <div 
+                key={item.href}
+                className="relative"
+                onMouseEnter={() => collapsed && !isMobile && setHoveredItem(item.href)}
+                onMouseLeave={() => setHoveredItem(null)}
+              >
+                {collapsed && !isMobile && hoveredItem === item.href && (
+                  <div className="absolute left-full bottom-0 ml-3 z-50 px-4 py-3 bg-white/95 dark:bg-black/95 backdrop-blur-xl border border-white/20 dark:border-gray-800/50 shadow-2xl rounded-xl text-sm font-medium whitespace-nowrap">
+                    {item.label}
+                    <div className="absolute right-full top-1/2 -translate-y-1/2 border-8 border-transparent border-r-white/95 dark:border-r-black/95" />
+                  </div>
+                )}
+                
+                <Button
+                  href={item.href}
+                  as={NextLink}
+                  variant="light"
+                  size="sm"
+                  className={clsx(
+                    "w-full h-10 font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-white/30 dark:hover:bg-white/5 transition-all duration-200 hover:scale-[1.02]",
+                    collapsed && !isMobile ? "px-0 justify-center min-w-10" : "px-3 justify-start"
+                  )}
+                  onPress={handleNavClick}
+                  startContent={
+                    <div className="flex items-center justify-center shrink-0">
+                      {item.icon}
+                    </div>
+                  }
+                >
+                  {!collapsed && (
+                    <span className="truncate text-left flex-1 text-sm">
+                      {item.label}
+                    </span>
+                  )}
+                </Button>
+              </div>
+            ))}
+          </nav>
+        </footer>
       </aside>
     </>
   );
