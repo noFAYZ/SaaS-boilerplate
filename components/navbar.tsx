@@ -232,9 +232,10 @@ export const Navbar = () => {
       <HeroUINavbar 
         maxWidth="full"
         className={clsx(
-          " shadow-none transition-all duration-75 ",
+          " transition-all duration-75  shadow-sm",
           isScrolled && "shadow-sm "
         )}
+       
     
         height="4rem"
       >

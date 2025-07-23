@@ -15,7 +15,7 @@ const NavigationContext = createContext<NavigationContextType | undefined>(undef
 
 export function NavigationProvider({ children }: { children: React.ReactNode }) {
   // Paths where sidebar should be disabled by default
-  const disabledSidebarPaths = ['/','/login', '/reset-password', '/update-password', '/profile', '/settings'];
+  const disabledSidebarPaths = ['/','/login', '/reset-password', '/update-password', ];
   
   // Initialize navigation mode from localStorage (if available) or default to 'sidebar'
   const [navigationMode, setNavigationModeState] = useState<NavigationMode>('sidebar');
